@@ -1,6 +1,12 @@
+// lib/main.dart
+
 import 'package:flutter/material.dart';
-import 'package:pdf_uploader/screens/pdf_upload_screen.dart';
-import 'package:pdf_uploader/screens/api_test.dart';
+import 'screens/pdf_upload_screen.dart';
+import 'screens/quiz_generation_screen.dart';
+import 'screens/quiz_screen.dart';
+import 'widgets/animated_wrapper.dart';
+import 'theme/app_theme.dart';
+
 void main() {
   runApp(MyApp());
 }
@@ -10,51 +16,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'PDF Quiz App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      initialRoute: '/',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      initialRoute: PdfUploadScreen.id,
       routes: {
-        '/': (context) => HomeScreen(),
-        '/pdfUpload': (context) => PdfUploadScreen(),
-        '/quiz': (context) => QuizScreen(),
-        '/questions': (context) => GeminiQuestionGenerator(),
+        PdfUploadScreen.id: (context) => AnimatedWrapper(child: PdfUploadScreen()),
+        QuizGenerationScreen.id: (context) =>  AnimatedWrapper(child: QuizGenerationScreen()),
+        QuizScreen.id: (context) =>  AnimatedWrapper(child: QuizScreen()),
       },
-    );
-  }
-}
-
-// Home Screen with Navigation to PDF Upload Screen
-class HomeScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Home')),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.pushNamed(context, '/questions');
-          },
-          child: Text('Go to PDF Upload'),
-        ),
-      ),
-    );
-  }
-}
-
-// Quiz Screen (Placeholder for Quiz Questions)
-class QuizScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Quiz')),
-      body: Center(
-        child: Text(
-          'Quiz Screen\n(Questions will be displayed here)',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 20),
-        ),
-      ),
     );
   }
 }
