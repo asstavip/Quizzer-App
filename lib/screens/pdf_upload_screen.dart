@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:pdf_uploader/screens/quiz_generation_screen.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class PdfUploadScreen extends StatefulWidget {
@@ -40,11 +41,12 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
         );
         Navigator.pushNamed(
           context,
-          '/generateQuiz',
+          QuizGenerationScreen.id,
           arguments: extractedText, // Pass text to next screen
         );
       }
     } catch (e) {
+      print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: Colors.red,
