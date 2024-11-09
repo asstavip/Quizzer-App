@@ -13,6 +13,8 @@ class _QuizScreenState extends State<QuizScreen> {
   int questionIndex = 0;
 
   int score = 0;
+  Color questionColor = Colors.white;
+  bool isAnswered = false;
 
   Timer? questionTimer;
   int remainingTime = 0;
@@ -61,11 +63,30 @@ class _QuizScreenState extends State<QuizScreen> {
     bool isCorrect = userPickedAnswer == correctAnswer;
 
     setState(() {
+      isAnswered = true;
+      if (isCorrect) {
+        score++;
+        questionColor = Colors.green;
+      } else {
+        questionColor = Colors.red;
+      }
+    });
+    setState(() {
       if (questionIndex >= questions!.length - 1) {
         showQuizComplete();
+        questionColor = Colors.white;
       } else {
-        questionIndex++;
-        isTimeUp = false;
+        Duration duration = const Duration(seconds: 2);
+        Future.delayed(duration, () {
+          setState(() {
+            questionIndex++;
+            questionColor = Colors.white;
+            isTimeUp = false;
+            isAnswered = false;
+          });
+        });
+
+
         if (questionTimer != null) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           startTimer(args['settings'].timePerQuestion);
@@ -131,6 +152,7 @@ class _QuizScreenState extends State<QuizScreen> {
           children: <Widget>[
             if (questionTimer != null)
               LinearProgressIndicator(
+                minHeight: 8,
                 value: remainingTime / (ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>)['settings'].timePerQuestion,
                 backgroundColor: Colors.grey[200],
                 valueColor: AlwaysStoppedAnimation<Color>(
@@ -142,33 +164,44 @@ class _QuizScreenState extends State<QuizScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Center(
-                  child: Card(
-                    elevation: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            questions![questionIndex]['questionText'],
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          if (isTimeUp)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 16.0),
-                              child: Text(
-                                'Time\'s up!',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.error,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
+                  /// where the Question goes
+                  child: TweenAnimationBuilder<double>(
+                    duration: const Duration(milliseconds: 400),
+                    tween: Tween(begin: 0.0, end: isAnswered ? 1.0 : 0.0),
+                    curve: Curves.easeInOut,
+                    builder: (context, value, _)
+                    {
+                      return Transform.translate(
+                          offset: Offset(0, 20 * (1 - value)),
+                    child: Card(
+                      color: questionColor,
+                      elevation: 4,
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              questions![questionIndex]['questionText'],
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            if (isTimeUp)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 16.0),
+                                child: Text(
+                                  'Time\'s up!',
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.error,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
+                    ));},
                   ),
                 ),
               ),
