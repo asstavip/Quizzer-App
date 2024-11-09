@@ -11,7 +11,7 @@ class QuizScreen extends StatefulWidget {
 class _QuizScreenState extends State<QuizScreen> {
   List<Map<String, dynamic>>? questions;
   int questionIndex = 0;
-  List<Icon> scoreKeeper = [];
+
   int score = 0;
 
   Timer? questionTimer;
@@ -61,13 +61,6 @@ class _QuizScreenState extends State<QuizScreen> {
     bool isCorrect = userPickedAnswer == correctAnswer;
 
     setState(() {
-      if (isCorrect) {
-        score++;
-        scoreKeeper.add(Icon(Icons.check, color: Colors.green));
-      } else {
-        scoreKeeper.add(Icon(Icons.close, color: Colors.red));
-      }
-
       if (questionIndex >= questions!.length - 1) {
         showQuizComplete();
       } else {
@@ -207,10 +200,6 @@ class _QuizScreenState extends State<QuizScreen> {
                   ),
                 ],
               ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: scoreKeeper,
             ),
           ],
         ),
