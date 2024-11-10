@@ -1,5 +1,7 @@
 // lib/screens/quiz_generation_screen.dart
 
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -74,7 +76,8 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final generatedText = data['candidates'][0]['content']['parts'][0]['text'] as String;
+        final generatedText =
+            data['candidates'][0]['content']['parts'][0]['text'] as String;
         List<Map<String, dynamic>> questionList = generatedText
             .split('\n')
             .where((line) => line.isNotEmpty)
@@ -84,8 +87,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
             "questionText": parsed['question'],
             "questionAnswer": parsed['answer'],
           };
-        })
-            .toList();
+        }).toList();
         if (!mounted) return;
 
         // Include quiz settings with the questions
@@ -104,13 +106,48 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
       } else {
         throw Exception('Failed to generate questions: ${response.body}');
       }
-
+    } on SocketException catch (e) {
+      print('No Internet connection: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No Internet connection. Please check your network.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } on TimeoutException catch (e) {
+      print('Request timed out: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Request timed out. Please try again later.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } on FormatException catch (e) {
+      print('Data format error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to generate questions. Please try again later.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } on HttpException catch (e) {
+      print('HTTP error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Server error. Please try again later.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } catch (e) {
       print('Error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: ${e.toString()}'),
+          content: const Text('Unexpected error. Please try again.'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -123,7 +160,8 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final String extractedText = ModalRoute.of(context)!.settings.arguments as String;
+    final String extractedText =
+        ModalRoute.of(context)!.settings.arguments as String;
 
     return Scaffold(
       appBar: AppBar(title: Text('Quiz Settings')),
@@ -257,17 +295,18 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
-                onPressed: isLoading ? null : () => generateQuestions(extractedText),
+                onPressed:
+                    isLoading ? null : () => generateQuestions(extractedText),
                 icon: isLoading
                     ? Container(
-                  width: 24,
-                  height: 24,
-                  padding: const EdgeInsets.all(2.0),
-                  child: const CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 3,
-                  ),
-                )
+                        width: 24,
+                        height: 24,
+                        padding: const EdgeInsets.all(2.0),
+                        child: const CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 3,
+                        ),
+                      )
                     : const Icon(Icons.quiz),
                 label: Text(isLoading ? 'Generating...' : 'Generate Quiz'),
               ),

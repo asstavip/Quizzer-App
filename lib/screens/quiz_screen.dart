@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pdf_uploader/screens/quiz_generation_screen.dart';
 import 'dart:async';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
@@ -66,9 +67,9 @@ class _QuizScreenState extends State<QuizScreen> {
       isAnswered = true;
       if (isCorrect) {
         score++;
-        questionColor = Colors.green;
+        questionColor = Colors.green[200]!;
       } else {
-        questionColor = Colors.red;
+        questionColor = Colors.red[200]!;
       }
     });
     setState(() {
@@ -106,7 +107,7 @@ class _QuizScreenState extends State<QuizScreen> {
         DialogButton(
           child: Text("Restart"),
           onPressed: () {
-            Navigator.popUntil(context, ModalRoute.withName('/'));
+            Navigator.popUntil(context, ModalRoute.withName(QuizGenerationScreen.id));
           },
         )
       ],
