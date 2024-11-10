@@ -76,8 +76,13 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final generatedText =
+        String generatedText =
             data['candidates'][0]['content']['parts'][0]['text'] as String;
+        // Clean generatedText by removing backticks and ```json markers
+        generatedText = generatedText
+            .replaceAll(RegExp(r'```json|```|\`'), '')  // Removes all backticks and ```json or ```
+            .trim();
+
         List<Map<String, dynamic>> questionList = generatedText
             .split('\n')
             .where((line) => line.isNotEmpty)
@@ -224,6 +229,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
                             value: QuizDifficulty.medium,
                             label: Text('Medium'),
                             icon: Icon(Icons.sentiment_neutral),
+
                           ),
                           ButtonSegment(
                             value: QuizDifficulty.hard,

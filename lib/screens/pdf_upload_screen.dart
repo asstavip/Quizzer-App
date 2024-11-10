@@ -27,6 +27,7 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
 
         PdfDocument document = PdfDocument(inputBytes: fileBytes);
         String extractedText = PdfTextExtractor(document).extractText();
+        extractedText = extractedText.trim();
         document.dispose();
 
         ScaffoldMessenger.of(context).showSnackBar(
