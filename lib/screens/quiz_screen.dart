@@ -16,6 +16,7 @@ class _QuizScreenState extends State<QuizScreen> {
   int score = 0;
   Color questionColor = Colors.white;
   bool isAnswered = false;
+  bool isLoadingNextQuestion = false;
 
   Timer? questionTimer;
   int remainingTime = 0;
@@ -60,6 +61,8 @@ class _QuizScreenState extends State<QuizScreen> {
   void checkAnswer(bool? userPickedAnswer) {
     if (isTimeUp && userPickedAnswer != null) return;
 
+    if(isLoadingNextQuestion) return;
+
     bool correctAnswer = questions![questionIndex]['questionAnswer'];
     bool isCorrect = userPickedAnswer == correctAnswer;
 
@@ -72,18 +75,22 @@ class _QuizScreenState extends State<QuizScreen> {
         questionColor = Colors.red[200]!;
       }
     });
+
+    isLoadingNextQuestion = true; //to prevent spamming the next question button
+
     setState(() {
       if (questionIndex >= questions!.length - 1) {
         showQuizComplete();
         questionColor = Colors.white;
       } else {
-        Duration duration = const Duration(seconds: 2);
+        Duration duration = const Duration(seconds: 1);
         Future.delayed(duration, () {
           setState(() {
             questionIndex++;
             questionColor = Colors.white;
             isTimeUp = false;
             isAnswered = false;
+            isLoadingNextQuestion = false; //reset to check again if spamming or not
           });
         });
 

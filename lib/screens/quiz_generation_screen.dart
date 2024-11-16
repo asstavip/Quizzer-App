@@ -53,7 +53,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
 
     try {
       final url = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBchYX4nCSNZ6cPoLFrXpJMWGpDatmfsN0');
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBfxqFrJ_F-Ct7FoZAnT-SsoW03KCt5YDA');
 
       final response = await http.post(
         url,
