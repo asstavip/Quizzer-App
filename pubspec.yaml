@@ -41,6 +41,16 @@ dependencies:
   rflutter_alert: ^2.0.7
   google_fonts: ^4.0.4
   lottie: ^2.6.0
+  flutter_launcher_icons: ^0.14.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "images/Pdf_Quizzer.png"
+  min_sdk_android: 16
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "images/Pdf_Quizzer.png"
+
 
 
 dev_dependencies:
