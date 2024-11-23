@@ -119,7 +119,7 @@ class _QuizScreenState extends State<QuizScreen> {
       desc: "Your score: $score/${questions!.length}",
       buttons: [
         DialogButton(
-          child: const Text("Review Answers"),
+          child: const Text("Review Answers",style: TextStyle(color: Colors.white),),
           onPressed: () {
             Navigator.pushNamed(
               context,
@@ -133,7 +133,7 @@ class _QuizScreenState extends State<QuizScreen> {
           },
         ),
         DialogButton(
-          child: const Text("New Quiz"),
+          child: const Text("New Quiz",style: TextStyle(color: Colors.white),),
           onPressed: () {
             Navigator.popUntil(
               context,

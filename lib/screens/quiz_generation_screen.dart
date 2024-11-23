@@ -51,21 +51,91 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
     }
   }
 
-    Future<void> generateQuestions(String text) async {
-      setState(() => isLoading = true);
-
+  List<Map<String, dynamic>> _parseQuestions(String jsonText) {
+    try {
+      // First, try to parse the entire response as a JSON array
       try {
-        final url = Uri.parse(
-            'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyBi7_r9TcYhllPROAXVKNkh59szIpzz9ig');
+        final List<dynamic> jsonArray = jsonDecode(jsonText);
+        return _validateAndTransformQuestions(jsonArray);
+      } catch (e) {
+        // If that fails, try parsing line by line
+        return _parseQuestionsLineByLine(jsonText);
+      }
+    } catch (e) {
+      throw FormatException('Failed to parse questions: $e');
+    }
+  }
 
-        final response = await http.post(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            "contents": [
-              {
-                "parts": [
-                  {
+  List<Map<String, dynamic>> _parseQuestionsLineByLine(String text) {
+    final List<Map<String, dynamic>> questions = [];
+    final lines = text
+        .split('\n')
+        .where((line) => line.trim().isNotEmpty)
+        .map((line) => line.trim())
+        .toList();
+
+    for (final line in lines) {
+      try {
+        if (line.startsWith('{') && line.endsWith('}')) {
+          final Map<String, dynamic> question = jsonDecode(line);
+          if (_isValidQuestionFormat(question)) {
+            questions.add(_transformQuestion(question));
+          }
+        }
+      } catch (e) {
+        print('Error parsing line: $line');
+        continue; // Skip invalid lines instead of failing completely
+      }
+    }
+
+    if (questions.isEmpty) {
+      throw FormatException('No valid questions found in the response');
+    }
+
+    return questions;
+  }
+
+  bool _isValidQuestionFormat(Map<String, dynamic> question) {
+    return question.containsKey('question') &&
+        question.containsKey('answer') &&
+        question.containsKey('explanation') &&
+        question['question'] is String &&
+        question['answer'] is bool &&
+        question['explanation'] is String;
+  }
+
+  Map<String, dynamic> _transformQuestion(Map<String, dynamic> rawQuestion) {
+    return {
+      "questionText": rawQuestion['question'],
+      "questionAnswer": rawQuestion['answer'],
+      "explanation": rawQuestion['explanation'],
+    };
+  }
+
+  List<Map<String, dynamic>> _validateAndTransformQuestions(List<dynamic> jsonArray) {
+    return jsonArray.map((item) {
+      if (item is! Map<String, dynamic> || !_isValidQuestionFormat(item)) {
+        throw FormatException('Invalid question format');
+      }
+      return _transformQuestion(item);
+    }).toList();
+  }
+
+  Future<void> generateQuestions(String text) async {
+    setState(() => isLoading = true);
+
+    try {
+      final url = Uri.parse(
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyBi7_r9TcYhllPROAXVKNkh59szIpzz9ig');
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "contents": [
+            {
+              "parts": [
+                {
                   "text": """${_getDifficultyPrompt()}
                 Based on this text: $text
                 Generate exactly $selectedQuestionCount true/false questions.
@@ -74,14 +144,14 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
                 2. Whether it is true or false
                 3. A brief explanation of why the answer is correct
                 
-                Format each question as a JSON object like this:
-                {
-                  "question": "Question text here",
-                  "answer": true/false,
-                  "explanation": "Explanation of why the answer is true/false"
-                }
-                
-                Provide only the JSON objects, one per line, with no additional text or formatting."""
+                Return the response as a JSON array of objects with this exact format:
+                [
+                  {
+                    "question": "Question text here",
+                    "answer": true/false,
+                    "explanation": "Explanation of why the answer is true/false"
+                  }
+                ]"""
                 }
               ]
             }
@@ -92,26 +162,17 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         String generatedText =
-            data['candidates'][0]['content']['parts'][0]['text'] as String;
-        // Clean generatedText by removing backticks and ```json markers
+        data['candidates'][0]['content']['parts'][0]['text'] as String;
+
+        // Clean the generated text
         generatedText = generatedText
-            .replaceAll(RegExp(r'```json|```|\`'), '')  // Removes all backticks and ```json or ```
+            .replaceAll(RegExp(r'```json|```|\`'), '')
             .trim();
 
-        List<Map<String, dynamic>> questionList = generatedText
-            .split('\n')
-            .where((line) => line.isNotEmpty)
-            .map((line) {
-          Map<String, dynamic> parsed = jsonDecode(line);
-          return {
-            "questionText": parsed['question'],
-            "questionAnswer": parsed['answer'],
-            // "explanation": parsed['explanation'], // Make sure to include explanation
-          };
-        }).toList();
+        final questionList = _parseQuestions(generatedText);
+
         if (!mounted) return;
 
-        // Include quiz settings with the questions
         final quizData = {
           'questions': questionList,
           'settings': QuizSettings(
@@ -121,63 +182,41 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
             timePerQuestion: timePerQuestion,
           ),
         };
-        Navigator.pushNamed(context, QuizScreen.id, arguments: quizData);
 
-        setState(() => isLoading = false);
+        Navigator.pushNamed(context, QuizScreen.id, arguments: quizData);
       } else {
-        throw Exception('Failed to generate questions: ${response.body}');
+        throw HttpException('Failed to generate questions: ${response.body}');
       }
     } on SocketException catch (e) {
+      _showError('No Internet connection. Please check your network.');
       print('No Internet connection: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No Internet connection. Please check your network.'),
-          backgroundColor: Colors.red,
-        ),
-      );
     } on TimeoutException catch (e) {
+      _showError('Request timed out. Please try again later.');
       print('Request timed out: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Request timed out. Please try again later.'),
-          backgroundColor: Colors.red,
-        ),
-      );
     } on FormatException catch (e) {
-        print("");
+      _showError('Failed to generate valid questions. Please try again.');
       print('Data format error: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to generate questions. Please try again later.'),
-          backgroundColor: Colors.red,
-        ),
-      );
     } on HttpException catch (e) {
+      _showError('Server error. Please try again later.');
       print('HTTP error: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Server error. Please try again later.'),
-          backgroundColor: Colors.red,
-        ),
-      );
     } catch (e) {
+      _showError('Unexpected error. Please try again.');
       print('Error: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Unexpected error. Please try again.'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
     } finally {
       if (mounted) {
         setState(() => isLoading = false);
       }
     }
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
   }
 
   @override
