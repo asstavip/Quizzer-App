@@ -16,7 +16,6 @@ class _QuizScreenState extends State<QuizScreen> {
   int questionIndex = 0;
 
   int score = 0;
-  Color questionColor = Colors.white;
   bool isAnswered = false;
 
   bool isProcessingAnswer = false;
@@ -78,9 +77,7 @@ class _QuizScreenState extends State<QuizScreen> {
       userAnswers[questionIndex] = userPickedAnswer;
       if (isCorrect) {
         score++;
-        questionColor = Colors.green[200]!;
       } else {
-        questionColor = Colors.red[200]!;
       }
     });
 
@@ -88,18 +85,12 @@ class _QuizScreenState extends State<QuizScreen> {
     setState(() {
       if (questionIndex >= questions!.length - 1) {
         showQuizComplete();
-        questionColor = Colors.white;
       } else {
-        Duration duration = const Duration(seconds: 2);
-        Future.delayed(duration, () {
-          setState(() {
-            questionIndex++;
-            questionColor = Colors.white;
-            isTimeUp = false;
-            isAnswered = false;
-          });
+        setState(() {
+          questionIndex++;
+          isTimeUp = false;
+          isAnswered = false;
         });
-
 
         if (questionTimer != null) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
@@ -206,7 +197,6 @@ class _QuizScreenState extends State<QuizScreen> {
                       return Transform.translate(
                           offset: Offset(0, 20 * (1 - value)),
                     child: Card(
-                      color: questionColor,
                       elevation: 4,
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
