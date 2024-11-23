@@ -90,10 +90,6 @@ class AnswerDetailScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Text(
-                      //   'Correct Answer:',
-                      //   style: Theme.of(context).textTheme.titleMedium,
-                      // ),
                       Row(
                         children: [
                           const Icon(
