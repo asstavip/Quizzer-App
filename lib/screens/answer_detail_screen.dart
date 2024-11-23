@@ -3,15 +3,19 @@ import 'package:flutter/material.dart';
 class AnswerDetailScreen extends StatelessWidget {
   static const String id = 'answer_detail';
 
+  const AnswerDetailScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final question = args['question'];
     final bool? userAnswer = args['userAnswer'];
     final int questionNumber = args['questionNumber'];
     final bool correctAnswer = question['questionAnswer'];
     final bool isCorrect = userAnswer == correctAnswer;
-    final String explanation = question['explanation'] ?? 'No explanation available';
+    final String explanation =
+        question['explanation'] ?? 'No explanation available';
 
     return Scaffold(
       appBar: AppBar(
@@ -73,7 +77,8 @@ class AnswerDetailScreen extends StatelessWidget {
                             : userAnswer.toString(),
                         style: TextStyle(
                           fontSize: 18,
-                          color: userAnswer == null ? Colors.orange : Colors.black,
+                          color:
+                              userAnswer == null ? Colors.orange : Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -93,8 +98,8 @@ class AnswerDetailScreen extends StatelessWidget {
                       Row(
                         children: [
                           const Icon(
-                             Icons.check_circle,
-                            color: Colors.green ,
+                            Icons.check_circle,
+                            color: Colors.green,
                             size: 24,
                           ),
                           const SizedBox(width: 8),
@@ -143,8 +148,8 @@ class AnswerDetailScreen extends StatelessWidget {
                       Text(
                         explanation,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          height: 1.5,
-                        ),
+                              height: 1.5,
+                            ),
                       ),
                     ],
                   ),

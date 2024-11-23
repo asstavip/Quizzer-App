@@ -1,5 +1,3 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
 import 'package:pdf_uploader/screens/answer_detail_screen.dart';
 import 'package:pdf_uploader/screens/answer_review_screen.dart';
