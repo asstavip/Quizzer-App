@@ -3,6 +3,8 @@ import 'package:pdf_uploader/screens/quiz_generation_screen.dart';
 import 'dart:async';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
+import 'answer_review_screen.dart';
+
 class QuizScreen extends StatefulWidget {
   static const String id = 'quiz';
   @override
@@ -17,6 +19,10 @@ class _QuizScreenState extends State<QuizScreen> {
   Color questionColor = Colors.white;
   bool isAnswered = false;
 
+  bool isProcessingAnswer = false;
+
+  List<bool?> userAnswers = [];
+
   Timer? questionTimer;
   int remainingTime = 0;
   bool isTimeUp = false;
@@ -29,6 +35,7 @@ class _QuizScreenState extends State<QuizScreen> {
       final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       if (args != null) {
         questions = List<Map<String, dynamic>>.from(args['questions']);
+        userAnswers = List.filled(questions!.length, null);
         final settings = args['settings'];
         if (settings.timedMode) {
           startTimer(settings.timePerQuestion);
@@ -63,8 +70,12 @@ class _QuizScreenState extends State<QuizScreen> {
     bool correctAnswer = questions![questionIndex]['questionAnswer'];
     bool isCorrect = userPickedAnswer == correctAnswer;
 
+    if (isProcessingAnswer || isAnswered) return;
+
     setState(() {
       isAnswered = true;
+      isProcessingAnswer = true;
+      userAnswers[questionIndex] = userPickedAnswer;
       if (isCorrect) {
         score++;
         questionColor = Colors.green[200]!;
@@ -72,6 +83,8 @@ class _QuizScreenState extends State<QuizScreen> {
         questionColor = Colors.red[200]!;
       }
     });
+
+
     setState(() {
       if (questionIndex >= questions!.length - 1) {
         showQuizComplete();
@@ -93,6 +106,7 @@ class _QuizScreenState extends State<QuizScreen> {
           startTimer(args['settings'].timePerQuestion);
         }
       }
+      isProcessingAnswer = false;
     });
   }
 
@@ -105,11 +119,28 @@ class _QuizScreenState extends State<QuizScreen> {
       desc: "Your score: $score/${questions!.length}",
       buttons: [
         DialogButton(
-          child: Text("Restart"),
+          child: const Text("Review Answers"),
           onPressed: () {
-            Navigator.popUntil(context, ModalRoute.withName(QuizGenerationScreen.id));
+            Navigator.pushNamed(
+              context,
+              QuizReviewScreen.id,
+              arguments: {
+                'questions': questions,
+                'userAnswers': userAnswers,
+                'score': score,
+              },
+            );
           },
-        )
+        ),
+        DialogButton(
+          child: const Text("New Quiz"),
+          onPressed: () {
+            Navigator.popUntil(
+              context,
+              ModalRoute.withName(QuizGenerationScreen.id),
+            );
+          },
+        ),
       ],
     ).show();
   }

@@ -33,40 +33,55 @@ class QuizGenerationScreen extends StatefulWidget {
 class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
   bool isLoading = false;
   int selectedQuestionCount = 5;
-  QuizDifficulty selectedDifficulty = QuizDifficulty.medium;
+  QuizDifficulty selectedDifficulty = QuizDifficulty.easy;
   bool timedModeEnabled = false;
   int timePerQuestion = 30; // Default 30 seconds per question
 
   String _getDifficultyPrompt() {
     switch (selectedDifficulty) {
       case QuizDifficulty.easy:
-        return "Generate basic, straightforward true/false questions focusing on main concepts and explicit information from the text.";
+        return """Generate basic, straightforward true/false questions focusing on main concepts and explicit information from the text.
+      Include simple explanations that directly reference the text.""";
       case QuizDifficulty.medium:
-        return "Generate moderately challenging true/false questions that require understanding of relationships between concepts and implicit information from the text.";
+        return """Generate moderately challenging true/false questions that require understanding relationships between concepts and implicit information from the text.
+      Include explanations that show the logical connection between text elements.""";
       case QuizDifficulty.hard:
-        return "Generate challenging true/false questions that require deep understanding, analysis, and connecting multiple concepts from the text.";
+        return """Generate challenging true/false questions that require deep understanding, analysis, and connecting multiple concepts from the text.
+      Include detailed explanations that demonstrate complex reasoning and multiple supporting points from the text.""";
     }
   }
 
-  Future<void> generateQuestions(String text) async {
-    setState(() => isLoading = true);
+    Future<void> generateQuestions(String text) async {
+      setState(() => isLoading = true);
 
-    try {
-      final url = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBchYX4nCSNZ6cPoLFrXpJMWGpDatmfsN0');
+      try {
+        final url = Uri.parse(
+            'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyBi7_r9TcYhllPROAXVKNkh59szIpzz9ig');
 
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "contents": [
-            {
-              "parts": [
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            "contents": [
+              {
+                "parts": [
+                  {
+                  "text": """${_getDifficultyPrompt()}
+                Based on this text: $text
+                Generate exactly $selectedQuestionCount true/false questions.
+                For each question, provide:
+                1. The question statement
+                2. Whether it is true or false
+                3. A brief explanation of why the answer is correct
+                
+                Format each question as a JSON object like this:
                 {
-                  "text": """${_getDifficultyPrompt()} 
-                  Generate exactly $selectedQuestionCount true or false questions based on this text: $text. 
-                  Provide each question as a JSON object in the format {\"question\": \"question text\", \"answer\": true/false}. 
-                  Do not use any additional formatting, styling, or extra text."""
+                  "question": "Question text here",
+                  "answer": true/false,
+                  "explanation": "Explanation of why the answer is true/false"
+                }
+                
+                Provide only the JSON objects, one per line, with no additional text or formatting."""
                 }
               ]
             }
@@ -91,6 +106,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
           return {
             "questionText": parsed['question'],
             "questionAnswer": parsed['answer'],
+            // "explanation": parsed['explanation'], // Make sure to include explanation
           };
         }).toList();
         if (!mounted) return;
@@ -130,6 +146,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
         ),
       );
     } on FormatException catch (e) {
+        print("");
       print('Data format error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
