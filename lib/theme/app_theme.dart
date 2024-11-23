@@ -20,7 +20,6 @@ class AppTheme {
         primary: customColors['primary']!,
         secondary: customColors['secondary']!,
         surface: customColors['surface']!,
-        background: customColors['background']!,
         error: customColors['error']!,
       ),
       textTheme: GoogleFonts.poppinsTextTheme(),

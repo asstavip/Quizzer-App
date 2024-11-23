@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:pdf_uploader/screens/quiz_generation_screen.dart';
@@ -6,6 +7,8 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class PdfUploadScreen extends StatefulWidget {
   static const id = 'pdf_upload_screen';
+
+  const PdfUploadScreen({super.key});
   @override
   _PdfUploadScreenState createState() => _PdfUploadScreenState();
 }
@@ -49,7 +52,9 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
         );
       }
     } catch (e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: Colors.red,
@@ -72,7 +77,7 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
       body: Center(
         child: ElevatedButton(
           onPressed: uploadAndReadPDF,
-          child: Text('Upload PDF'),
+          child: const Text('Upload PDF'),
         ),
       ),
     );

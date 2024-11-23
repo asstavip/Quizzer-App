@@ -5,6 +5,8 @@ import 'answer_detail_screen.dart';
 class QuizReviewScreen extends StatelessWidget {
   static const String id = 'quiz_review';
 
+  const QuizReviewScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;

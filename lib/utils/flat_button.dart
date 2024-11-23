@@ -7,7 +7,7 @@ class FlatButton extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final BorderRadiusGeometry? borderRadius;
 
-  FlatButton({
+  const FlatButton({super.key,
     required this.child,
     required this.onPressed,
     this.color,
