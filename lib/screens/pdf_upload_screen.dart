@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:pdf_uploader/screens/quiz_generation_screen.dart';
@@ -6,11 +7,21 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class PdfUploadScreen extends StatefulWidget {
   static const id = 'pdf_upload_screen';
+
+  const PdfUploadScreen({super.key});
   @override
   _PdfUploadScreenState createState() => _PdfUploadScreenState();
 }
 
 class _PdfUploadScreenState extends State<PdfUploadScreen> {
+  /// Upload and read PDF file using FilePicker and PdfTextExtractor.
+  /// and this will navigate to the next screen if PDF is successfully read
+  ///
+  /// This function will:
+  /// 1. Open a file picker dialog to select a PDF file
+  /// 2. Read the selected PDF file using PdfTextExtractor
+  /// 3. If the file is successfully read, navigate to the next screen with the extracted text
+  /// 4. If there is an error, show an error message using ScaffoldMessenger
   Future<void> uploadAndReadPDF() async {
     /// Upload and read PDF file using FilePicker and PdfTextExtractor.
     /// and this will navigate to the next screen if PDF is successfully read
@@ -37,7 +48,8 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
               children: [
                 Icon(Icons.check, color: Colors.white),
                 SizedBox(width: 8),
-                Text('PDF successfully read!', style: TextStyle(color: Colors.white)),
+                Text('PDF successfully read!',
+                    style: TextStyle(color: Colors.white)),
               ],
             ),
           ),
@@ -49,7 +61,9 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
         );
       }
     } catch (e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: Colors.red,
@@ -72,11 +86,9 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
       body: Center(
         child: ElevatedButton(
           onPressed: uploadAndReadPDF,
-          child: Text('Upload PDF'),
+          child: const Text('Upload PDF'),
         ),
       ),
     );
   }
 }
-
-

@@ -3,6 +3,8 @@ import 'package:pdf_uploader/screens/quiz_generation_screen.dart';
 import 'dart:async';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
+import 'answer_review_screen.dart';
+
 class QuizScreen extends StatefulWidget {
   static const String id = 'quiz';
   @override
@@ -14,9 +16,12 @@ class _QuizScreenState extends State<QuizScreen> {
   int questionIndex = 0;
 
   int score = 0;
-  Color questionColor = Colors.white;
   bool isAnswered = false;
   bool isLoadingNextQuestion = false;
+
+  bool isProcessingAnswer = false;
+
+  List<bool?> userAnswers = [];
 
   Timer? questionTimer;
   int remainingTime = 0;
@@ -27,9 +32,11 @@ class _QuizScreenState extends State<QuizScreen> {
     super.didChangeDependencies();
     // Initialize data if not already done
     if (questions == null) {
-      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       if (args != null) {
         questions = List<Map<String, dynamic>>.from(args['questions']);
+        userAnswers = List.filled(questions!.length, null);
         final settings = args['settings'];
         if (settings.timedMode) {
           startTimer(settings.timePerQuestion);
@@ -61,19 +68,20 @@ class _QuizScreenState extends State<QuizScreen> {
   void checkAnswer(bool? userPickedAnswer) {
     if (isTimeUp && userPickedAnswer != null) return;
 
-    if(isLoadingNextQuestion) return;
+    if (isLoadingNextQuestion) return;
 
     bool correctAnswer = questions![questionIndex]['questionAnswer'];
     bool isCorrect = userPickedAnswer == correctAnswer;
 
+    if (isProcessingAnswer || isAnswered) return;
+
     setState(() {
       isAnswered = true;
+      isProcessingAnswer = true;
+      userAnswers[questionIndex] = userPickedAnswer;
       if (isCorrect) {
         score++;
-        questionColor = Colors.green[200]!;
-      } else {
-        questionColor = Colors.red[200]!;
-      }
+      } else {}
     });
 
     isLoadingNextQuestion = true; //to prevent spamming the next question button
@@ -81,25 +89,25 @@ class _QuizScreenState extends State<QuizScreen> {
     setState(() {
       if (questionIndex >= questions!.length - 1) {
         showQuizComplete();
-        questionColor = Colors.white;
       } else {
         Duration duration = const Duration(seconds: 1);
         Future.delayed(duration, () {
           setState(() {
             questionIndex++;
-            questionColor = Colors.white;
             isTimeUp = false;
             isAnswered = false;
-            isLoadingNextQuestion = false; //reset to check again if spamming or not
+            isLoadingNextQuestion =
+                false; //reset to check again if spamming or not
           });
         });
 
-
         if (questionTimer != null) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
           startTimer(args['settings'].timePerQuestion);
         }
       }
+      isProcessingAnswer = false;
     });
   }
 
@@ -112,11 +120,34 @@ class _QuizScreenState extends State<QuizScreen> {
       desc: "Your score: $score/${questions!.length}",
       buttons: [
         DialogButton(
-          child: Text("Restart"),
+          child: const Text(
+            "Review Answers",
+            style: TextStyle(color: Colors.white),
+          ),
           onPressed: () {
-            Navigator.popUntil(context, ModalRoute.withName(QuizGenerationScreen.id));
+            Navigator.pushNamed(
+              context,
+              QuizReviewScreen.id,
+              arguments: {
+                'questions': questions,
+                'userAnswers': userAnswers,
+                'score': score,
+              },
+            );
           },
-        )
+        ),
+        DialogButton(
+          child: const Text(
+            "New Quiz",
+            style: TextStyle(color: Colors.white),
+          ),
+          onPressed: () {
+            Navigator.popUntil(
+              context,
+              ModalRoute.withName(QuizGenerationScreen.id),
+            );
+          },
+        ),
       ],
     ).show();
   }
@@ -161,7 +192,10 @@ class _QuizScreenState extends State<QuizScreen> {
             if (questionTimer != null)
               LinearProgressIndicator(
                 minHeight: 8,
-                value: remainingTime / (ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>)['settings'].timePerQuestion,
+                value: remainingTime /
+                    (ModalRoute.of(context)!.settings.arguments
+                            as Map<String, dynamic>)['settings']
+                        .timePerQuestion,
                 backgroundColor: Colors.grey[200],
                 valueColor: AlwaysStoppedAnimation<Color>(
                   remainingTime > 5 ? Colors.green : Colors.red,
@@ -177,39 +211,41 @@ class _QuizScreenState extends State<QuizScreen> {
                     duration: const Duration(milliseconds: 400),
                     tween: Tween(begin: 0.0, end: isAnswered ? 1.0 : 0.0),
                     curve: Curves.easeInOut,
-                    builder: (context, value, _)
-                    {
+                    builder: (context, value, _) {
                       return Transform.translate(
                           offset: Offset(0, 20 * (1 - value)),
-                    child: Card(
-                      color: questionColor,
-                      elevation: 4,
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              questions![questionIndex]['questionText'],
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            if (isTimeUp)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 16.0),
-                                child: Text(
-                                  'Time\'s up!',
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.error,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
+                          child: Card(
+                            elevation: 4,
+                            child: Padding(
+                              padding: const EdgeInsets.all(24.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    questions![questionIndex]['questionText'],
+                                    textAlign: TextAlign.center,
+                                    style:
+                                        Theme.of(context).textTheme.titleLarge,
                                   ),
-                                ),
+                                  if (isTimeUp)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 16.0),
+                                      child: Text(
+                                        'Time\'s up!',
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .error,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
-                          ],
-                        ),
-                      ),
-                    ));},
+                            ),
+                          ));
+                    },
                   ),
                 ),
               ),
@@ -236,7 +272,8 @@ class _QuizScreenState extends State<QuizScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                       onPressed: isTimeUp ? null : () => checkAnswer(false),
-                      child: const Text('False', style: TextStyle(fontSize: 20)),
+                      child:
+                          const Text('False', style: TextStyle(fontSize: 20)),
                     ),
                   ),
                 ],
