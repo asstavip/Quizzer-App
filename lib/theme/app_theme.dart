@@ -48,6 +48,12 @@ class AppTheme {
           elevation: 0,
         ),
       ),
+      dialogTheme: DialogTheme(
+        backgroundColor: customColors['primary'],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
       cardTheme: CardTheme(
         elevation: 2,
         shape: RoundedRectangleBorder(

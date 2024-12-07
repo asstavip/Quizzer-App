@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class AnimatedWrapper extends StatelessWidget {
   final Widget child;
 
-  const AnimatedWrapper({Key? key, required this.child}) : super(key: key);
+  const AnimatedWrapper({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {

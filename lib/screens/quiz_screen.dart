@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pdf_uploader/screens/quiz_generation_screen.dart';
+import 'package:pdf_uploader/theme/app_theme.dart';
 import 'dart:async';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
@@ -7,6 +8,8 @@ import 'answer_review_screen.dart';
 
 class QuizScreen extends StatefulWidget {
   static const String id = 'quiz';
+
+  const QuizScreen({super.key});
   @override
   _QuizScreenState createState() => _QuizScreenState();
 }
@@ -20,7 +23,7 @@ class _QuizScreenState extends State<QuizScreen> {
   bool isLoadingNextQuestion = false;
 
   bool isProcessingAnswer = false;
-
+  Color answerColor = Colors.white;
   List<bool?> userAnswers = [];
 
   Timer? questionTimer;
@@ -81,7 +84,10 @@ class _QuizScreenState extends State<QuizScreen> {
       userAnswers[questionIndex] = userPickedAnswer;
       if (isCorrect) {
         score++;
-      } else {}
+        answerColor = AppTheme.customColors['success']!;
+      } else {
+        answerColor = AppTheme.customColors['error']!;
+      }
     });
 
     isLoadingNextQuestion = true; //to prevent spamming the next question button
@@ -98,6 +104,7 @@ class _QuizScreenState extends State<QuizScreen> {
             isAnswered = false;
             isLoadingNextQuestion =
                 false; //reset to check again if spamming or not
+            answerColor = Colors.white;
           });
         });
 
@@ -118,6 +125,9 @@ class _QuizScreenState extends State<QuizScreen> {
       type: AlertType.success,
       title: "Quiz Complete!",
       desc: "Your score: $score/${questions!.length}",
+      closeIcon: IconButton(onPressed: (){
+        Navigator.popUntil(context, ModalRoute.withName(QuizGenerationScreen.id));
+      }, icon: Icon(Icons.close)),
       buttons: [
         DialogButton(
           child: const Text(
@@ -208,43 +218,43 @@ class _QuizScreenState extends State<QuizScreen> {
                 child: Center(
                   /// where the Question goes
                   child: TweenAnimationBuilder<double>(
-                    duration: const Duration(milliseconds: 400),
+                    duration: const Duration(milliseconds: 200),
                     tween: Tween(begin: 0.0, end: isAnswered ? 1.0 : 0.0),
                     curve: Curves.easeInOut,
                     builder: (context, value, _) {
                       return Transform.translate(
-                          offset: Offset(0, 20 * (1 - value)),
-                          child: Card(
-                            elevation: 4,
-                            child: Padding(
-                              padding: const EdgeInsets.all(24.0),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    questions![questionIndex]['questionText'],
-                                    textAlign: TextAlign.center,
-                                    style:
-                                        Theme.of(context).textTheme.titleLarge,
-                                  ),
-                                  if (isTimeUp)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 16.0),
-                                      child: Text(
-                                        'Time\'s up!',
-                                        style: TextStyle(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .error,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                        offset: Offset(0, 20 * (1 - value)),
+                        child: Card(
+                          color: answerColor,
+                          elevation: 4,
+                          child: Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  questions![questionIndex]['questionText'],
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                                if (isTimeUp)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 16.0),
+                                    child: Text(
+                                      'Time\'s up!',
+                                      style: TextStyle(
+                                        color:
+                                            Theme.of(context).colorScheme.error,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                ],
-                              ),
+                                  ),
+                              ],
                             ),
-                          ));
+                          ),
+                        ),
+                      );
                     },
                   ),
                 ),

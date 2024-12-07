@@ -28,9 +28,11 @@ class MyApp extends StatelessWidget {
             const AnimatedWrapper(child: PdfUploadScreen()),
         QuizGenerationScreen.id: (context) =>
             const AnimatedWrapper(child: QuizGenerationScreen()),
-        QuizScreen.id: (context) => AnimatedWrapper(child: QuizScreen()),
-        QuizReviewScreen.id: (context) => const QuizReviewScreen(),
-        AnswerDetailScreen.id: (context) => AnswerDetailScreen(),
+        QuizScreen.id: (context) => const AnimatedWrapper(child: QuizScreen()),
+        QuizReviewScreen.id: (context) =>
+            const AnimatedWrapper(child: QuizReviewScreen()),
+        AnswerDetailScreen.id: (context) =>
+            const AnimatedWrapper(child: AnswerDetailScreen()),
       },
     );
   }

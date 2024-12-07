@@ -156,7 +156,6 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
                 1. The question statement
                 2. Whether it is true or false
                 3. A brief explanation of why the answer is correct
-                
                 Return the response as a JSON array of objects with this exact format:
                 [
                   {
