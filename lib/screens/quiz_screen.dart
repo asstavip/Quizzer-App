@@ -121,13 +121,18 @@ class _QuizScreenState extends State<QuizScreen> {
   void showQuizComplete() {
     questionTimer?.cancel();
     Alert(
+      style: const AlertStyle(
+        animationType: AnimationType.grow,
+        isCloseButton: false,
+        isOverlayTapDismiss: false,
+      ),
       context: context,
       type: AlertType.success,
       title: "Quiz Complete!",
       desc: "Your score: $score/${questions!.length}",
       closeIcon: IconButton(onPressed: (){
         Navigator.popUntil(context, ModalRoute.withName(QuizGenerationScreen.id));
-      }, icon: Icon(Icons.close)),
+      }, icon: const Icon(Icons.close)),
       buttons: [
         DialogButton(
           child: const Text(

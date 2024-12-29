@@ -6,10 +6,9 @@ import 'screens/quiz_generation_screen.dart';
 import 'screens/quiz_screen.dart';
 import 'widgets/animated_wrapper.dart';
 import 'theme/app_theme.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+// import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() async {
-  await dotenv.load(fileName: ".env");
+void main()  {
   runApp(const MyApp());
 }
 
