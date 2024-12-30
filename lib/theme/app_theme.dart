@@ -11,6 +11,7 @@ class AppTheme {
     'surface': Colors.white,
     'error': const Color(0xFFFF6B6B),
     'success': const Color(0xFF4CAF50),
+    'blue': const Color(0xFF2196F3),
   };
 
   static ThemeData get lightTheme {

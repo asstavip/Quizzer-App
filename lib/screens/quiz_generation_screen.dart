@@ -3,7 +3,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-// import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -137,9 +137,9 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
     setState(() => isLoading = true);
 
     try {
-      // final apiKey = dotenv.env['API_KEY']!;
+      final apiKey = dotenv.env['API_KEY']!;
       final url = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyCYP1MJXFx2bFA05MZZYwhVS45VNcIjeR4');
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=$apiKey');
 
       final response = await http.post(
         url,
