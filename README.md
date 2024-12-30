@@ -43,23 +43,36 @@ PDF Quizzer is an innovative mobile application that transforms PDF documents in
 1. **PDF Upload Screen**
    - Initial screen for uploading PDF documents
    - Supports file selection and text extraction
+   - ![upload screen](https://github.com/user-attachments/assets/ede9b8bf-4d59-43ed-8fcd-af1b055f3f8e)
 
 2. **Quiz Generation Screen**
    - Customize quiz parameters
    - Generate questions based on PDF content
+   - ![Quiz Generation Screen](https://github.com/user-attachments/assets/74fd3d50-e089-4864-a81e-119704733b93)
+   - ![Quiz Generation Screen 2](https://github.com/user-attachments/assets/0dff048f-0102-4bb6-9b03-a35f19de4440)
+
+
 
 3. **Quiz Screen**
    - Interactive true/false quiz
    - Timer option
    - Immediate feedback
+   - ![Quiz Screen](https://github.com/user-attachments/assets/71cd93ca-aad4-4a72-96a4-e393dcb15807)
+   - ![Quiz Screen 2 ](https://github.com/user-attachments/assets/e4ac4bda-ae58-444c-9f72-37e15a93deb0)
+
+
 
 4. **Answer Review Screen**
    - Comprehensive quiz results
    - Detailed question breakdown
+   - ![Answer Review Screen](https://github.com/user-attachments/assets/f5b312aa-f9a8-4112-8a0e-5d94521ab35e)
+
 
 5. **Answer Detail Screen**
    - In-depth view of individual questions
    - Shows correct answer, user's response, and explanation
+   - ![Answer Detail Screen](https://github.com/user-attachments/assets/1a1b7771-cc7d-417c-9dd2-1b7cfb3d0732)
+
 
 ## Getting Started 🚀
 
@@ -72,7 +85,7 @@ PDF Quizzer is an innovative mobile application that transforms PDF documents in
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/yourusername/pdf-quizzer.git
+   git clone https://github.com/asstavip/pdf-quizzer.git
    ```
 
 2. Install dependencies
@@ -132,6 +145,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact 📧
 
-Your Name - youremail@example.com
+Abderrahman El Bissari - pissariabdo@gmail.com
 
-Project Link: [https://github.com/yourusername/pdf-quizzer](https://github.com/yourusername/pdf-quizzer)
+Project Link: [https://github.com/asstavip/pdf-quizzer](https://github.com/yourusername/pdf-quizzer)
