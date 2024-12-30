@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'package:pdf_uploader/screens/quiz_screen.dart';
+import 'package:pdf_uploader/theme/app_theme.dart';
 
 enum QuizDifficulty { easy, medium, hard }
 
@@ -289,6 +290,23 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
                       ),
                       const SizedBox(height: 8),
                       SegmentedButton<QuizDifficulty>(
+                        style: ButtonStyle(
+                          padding:
+                              WidgetStateProperty.all(const EdgeInsets.all(12)),
+                          backgroundColor:
+                              WidgetStateProperty.resolveWith((states) {
+                            if (states.contains(WidgetState.selected)) {
+                              return AppTheme.customColors[
+                                  'primary']; // Highlight for selected button
+                            }
+                            return Colors
+                                .grey.shade200; // Default button background
+                          }),
+                          shape: WidgetStateProperty.all(
+                            RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
                         segments: const [
                           ButtonSegment(
                             value: QuizDifficulty.easy,

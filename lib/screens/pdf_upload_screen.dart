@@ -13,6 +13,7 @@ class PdfUploadScreen extends StatefulWidget {
 
   const PdfUploadScreen({super.key});
   @override
+  // ignore: library_private_types_in_public_api
   _PdfUploadScreenState createState() => _PdfUploadScreenState();
 }
 
@@ -45,6 +46,7 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
         document.dispose();
 
         ToastService.showSuccessToast(
+          // ignore: use_build_context_synchronously
           context,
           length: ToastLength.medium,
           expandedHeight: 100,
@@ -65,6 +67,7 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
         //   ),
         // );
         Navigator.pushNamed(
+          // ignore: use_build_context_synchronously
           context,
           QuizGenerationScreen.id,
           arguments: extractedText, // Pass text to next screen
@@ -88,6 +91,7 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
       //   ),
       // );
       ToastService.showErrorToast(
+        // ignore: use_build_context_synchronously
         context,
         length: ToastLength.medium,
         expandedHeight: 100,
@@ -126,10 +130,9 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
               stops: const [0.0, 0.7],
             ),
           ],
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Colors.transparent,
             shape: BoxShape.rectangle,
-            borderRadius: BorderRadius.circular(10.0),
           ),
           child: Center(
             child: ElevatedButton(
