@@ -43,6 +43,7 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
         PdfDocument document = PdfDocument(inputBytes: fileBytes);
         String extractedText = PdfTextExtractor(document).extractText();
         extractedText = extractedText.trim();
+        print(extractedText);
         document.dispose();
 
         ToastService.showSuccessToast(
@@ -103,7 +104,29 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text('PDF Quizzer App')),
+        appBar: AppBar(
+          title: RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                    text: 'PDF ',
+                    style: TextStyle(
+                        color: AppTheme.customColors['background'],
+                        fontWeight: FontWeight.bold)),
+                TextSpan(
+                    text: 'Quizzer ',
+                    style: TextStyle(
+                        color: AppTheme.customColors['secondary'],
+                        fontWeight: FontWeight.bold)),
+                TextSpan(
+                    text: 'Uploader',
+                    style: TextStyle(
+                        color: AppTheme.customColors['background'],
+                        fontWeight: FontWeight.bold))
+              ],
+            ),
+          ),
+        ),
         body: AuraBox(
           spots: [
             AuraSpot(

@@ -153,6 +153,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
                   "text": """${_getDifficultyPrompt()}
                 Based on this text: $text
                 Generate exactly $selectedQuestionCount true/false questions.
+                The questions must be in the same language as the provided text.
                 For each question, provide:
                 1. The question statement
                 2. Whether it is true or false

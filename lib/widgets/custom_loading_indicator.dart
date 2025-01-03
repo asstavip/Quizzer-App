@@ -15,7 +15,8 @@ class CustomLoadingIndicator extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color:
+                  Colors.black.withValues(red: 0, blue: 0, green: 0, alpha: 26),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
