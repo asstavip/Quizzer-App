@@ -3,7 +3,8 @@ import 'package:pdf_uploader/screens/quiz_generation_screen.dart';
 import 'package:pdf_uploader/theme/app_theme.dart';
 import 'dart:async';
 import 'package:rflutter_alert/rflutter_alert.dart';
-
+import 'package:pdf_uploader/utils/strings.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'answer_review_screen.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -128,16 +129,16 @@ class _QuizScreenState extends State<QuizScreen> {
       ),
       context: context,
       type: AlertType.success,
-      title: "Quiz Complete!",
-      desc: "Your score: $score/${questions!.length}",
+      title: AppStrings.quizCompleteTitle.tr(),
+      desc: "${AppStrings.scoreText.tr()} $score/${questions!.length}",
       closeIcon: IconButton(onPressed: (){
         Navigator.popUntil(context, ModalRoute.withName(QuizGenerationScreen.id));
       }, icon: const Icon(Icons.close)),
       buttons: [
         DialogButton(
-          child: const Text(
-            "Review Answers",
-            style: TextStyle(color: Colors.white),
+          child: Text(
+            AppStrings.reviewAnswers.tr(),
+            style: const TextStyle(color: Colors.white),
           ),
           onPressed: () {
             Navigator.pushNamed(
@@ -152,9 +153,9 @@ class _QuizScreenState extends State<QuizScreen> {
           },
         ),
         DialogButton(
-          child: const Text(
-            "New Quiz",
-            style: TextStyle(color: Colors.white),
+          child: Text(
+            AppStrings.newQuiz.tr(),
+            style: const TextStyle(color: Colors.white),
           ),
           onPressed: () {
             Navigator.popUntil(
@@ -182,7 +183,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Question ${questionIndex + 1}/${questions!.length}'),
+        title: Text('${AppStrings.questionNumberText.tr()} ${questionIndex + 1}/${questions!.length}'),
         actions: [
           if (questionTimer != null)
             Padding(
@@ -246,7 +247,7 @@ class _QuizScreenState extends State<QuizScreen> {
                                   Padding(
                                     padding: const EdgeInsets.only(top: 16.0),
                                     child: Text(
-                                      'Time\'s up!',
+                                      AppStrings.timesUp.tr(),
                                       style: TextStyle(
                                         color:
                                             Theme.of(context).colorScheme.error,
@@ -276,7 +277,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                       onPressed: isTimeUp ? null : () => checkAnswer(true),
-                      child: const Text('True', style: TextStyle(fontSize: 20)),
+                      child: Text(AppStrings.trueLabel.tr(), style: const TextStyle(fontSize: 20)),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -287,8 +288,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                       onPressed: isTimeUp ? null : () => checkAnswer(false),
-                      child:
-                          const Text('False', style: TextStyle(fontSize: 20)),
+                      child: Text(AppStrings.falseLabel.tr(), style: const TextStyle(fontSize: 20)),
                     ),
                   ),
                 ],

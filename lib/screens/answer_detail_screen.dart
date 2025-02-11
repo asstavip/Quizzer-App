@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pdf_uploader/utils/strings.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AnswerDetailScreen extends StatelessWidget {
   static const String id = 'answer_detail';
@@ -7,19 +9,17 @@ class AnswerDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final args =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final question = args['question'];
     final bool? userAnswer = args['userAnswer'];
     final int questionNumber = args['questionNumber'];
     final bool correctAnswer = question['questionAnswer'];
     final bool isCorrect = userAnswer == correctAnswer;
-    final String explanation =
-        question['explanation'] ?? 'No explanation available';
+    final String explanation = question['explanation'] ?? 'No explanation available';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Question $questionNumber Details'),
+        title: Text('${AppStrings.questionDetailsTitlePrefix.tr()} $questionNumber Details'),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -35,7 +35,7 @@ class AnswerDetailScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Question:',
+                        AppStrings.questionLabel.tr(),
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 8),
@@ -65,7 +65,7 @@ class AnswerDetailScreen extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Your Answer:',
+                            AppStrings.yourAnswerLabel.tr(),
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ],
@@ -73,12 +73,11 @@ class AnswerDetailScreen extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         userAnswer == null
-                            ? 'Time\'s up (No answer provided)'
+                            ? AppStrings.noAnswer.tr()
                             : userAnswer.toString(),
                         style: TextStyle(
                           fontSize: 18,
-                          color:
-                              userAnswer == null ? Colors.orange : Colors.black,
+                          color: userAnswer == null ? Colors.orange : Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -104,7 +103,7 @@ class AnswerDetailScreen extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Correct Answer:',
+                            AppStrings.correctAnswerLabel.tr(),
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ],
@@ -139,7 +138,7 @@ class AnswerDetailScreen extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Explanation:',
+                            AppStrings.explanationLabel.tr(),
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ],
