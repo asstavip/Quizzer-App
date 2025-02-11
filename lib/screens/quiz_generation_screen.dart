@@ -166,7 +166,22 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
           "contents": [
             {
               "parts": [
-                {"text": "${_getDifficultyPrompt()}\n\nBased on this text:\n$text\n\nGenerate exactly $selectedQuestionCount true/false questions. Return them in this exact JSON format:\n[\n  {\n    \"question\": \"Question text here\",\n    \"answer\": true/false,\n    \"explanation\": \"Explanation why true/false\"\n  }\n]"}
+                {"text": """${_getDifficultyPrompt()}
+                Based on this text: $text
+                Generate exactly $selectedQuestionCount true/false questions.
+                The questions must be in the same language as the provided text.
+                For each question, provide:
+                1. The question statement
+                2. Whether it is true or false
+                3. A brief explanation of why the answer is correct
+                Return the response as a JSON array of objects with this exact format:
+                [
+                  {
+                    "question": "Question text here",
+                    "answer": true/false,
+                    "explanation": "Explanation of why the answer is true/false"
+                  }
+                ]"""}
               ]
             }
           ],
