@@ -52,4 +52,11 @@ class AppStrings {
   static const String easyPrompt = "Generate basic, straightforward true/false questions focusing on main concepts and explicit information from the text. Include simple explanations that directly reference the text.";
   static const String mediumPrompt = "Generate moderately challenging true/false questions that require understanding relationships between concepts and implicit information from the text. Include explanations that show the logical connection between text elements.";
   static const String hardPrompt = "Generate challenging true/false questions that require deep understanding, analysis, and connecting multiple concepts from the text. Include detailed explanations that demonstrate complex reasoning and multiple supporting points from the text.";
+
+  // PDF Preview Screen texts
+  static const String selectPages = 'selectPages';
+  static const String generateQuizSelected = 'generateQuizSelected';
+  static const String selectAll = 'selectAll';
+  static const String clearSelection = 'clearSelection';
+  static const String page = 'page';
 }

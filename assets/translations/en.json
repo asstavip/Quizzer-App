@@ -33,5 +33,10 @@
   "correctAnswerLabel": "Correct Answer:",
   "explanationLabel": "Explanation:",
   "questionDetailsTitlePrefix": "Question",
-  "pdfOnlyFiles": "Only PDF files are allowed"
+  "pdfOnlyFiles": "Only PDF files are allowed",
+  "selectPages": "Select Pages",
+  "generateQuizSelected": "Generate Quiz",
+  "selectAll": "Select All",
+  "clearSelection": "Clear",
+  "page": "Page"
 }

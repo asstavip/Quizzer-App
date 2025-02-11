@@ -407,7 +407,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
                           strokeWidth: 3,
                         ),
                       )
-                    : const Icon(Icons.quiz),
+                    : const Icon(Icons.quiz, size: 24, color: Colors.white),
                 label: Text(isLoading ? AppStrings.generating.tr() : AppStrings.generateQuiz.tr()),
               ),
             ],

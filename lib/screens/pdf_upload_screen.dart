@@ -1,11 +1,9 @@
-import 'dart:io';
-import 'package:aura_box/aura_box.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:pdf_uploader/screens/quiz_generation_screen.dart';
+import 'package:pdf_uploader/screens/pdf_preview_screen.dart';
 import 'package:pdf_uploader/theme/app_theme.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'package:aura_box/aura_box.dart';
 import 'package:pdf_uploader/utils/strings.dart';
 import 'package:easy_localization/easy_localization.dart';
 
@@ -43,67 +41,32 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
-        allowMultiple: false,
+        withData: true,
       );
 
-      if (result == null || result.files.isEmpty) {
-        _showSnackBar('No file selected', true);
-        return;
-      }
-
-      final file = result.files.first;
-      Uint8List? bytes;
-      
-      if (file.bytes != null) {
-        // Web platform
-        bytes = file.bytes;
-      } else if (file.path != null) {
-        // Mobile/Desktop platforms
-        final fileBytes = await File(file.path!).readAsBytes();
-        bytes = fileBytes;
-      }
-
-      if (bytes == null) {
-        _showSnackBar('Could not read file data', true);
-        return;
-      }
-
-      // Process PDF
-      final document = PdfDocument(inputBytes: bytes);
-      String text = '';
-      
-      try {
-        for (int i = 0; i < document.pages.count; i++) {
-          final pageText = PdfTextExtractor(document).extractText(startPageIndex: i, endPageIndex: i);
-          if (kDebugMode) {
-            print('Page ${i + 1} text length: ${pageText.length}');
-          }
-          text += pageText;
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+        final bytes = file.bytes;
+        
+        if (bytes == null) {
+          throw Exception('Could not read file data');
         }
-      } finally {
-        document.dispose();
+
+        _showSnackBar(AppStrings.pdfSuccess.tr(), false);
+
+        if (!mounted) return;
+
+        // Navigate to PDF preview screen instead of quiz generation
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PdfPreviewScreen(
+              pdfBytes: bytes,
+              fileName: file.name,
+            ),
+          ),
+        );
       }
-
-      if (text.trim().isEmpty) {
-        _showSnackBar('No text could be extracted from the PDF', true);
-        return;
-      }
-
-      _showSnackBar(AppStrings.pdfSuccess.tr(), false);
-
-      if (!mounted) return;
-
-      // Navigate to quiz generation
-      await Future.delayed(const Duration(milliseconds: 500));
-      Navigator.pushNamed(
-        context,
-        QuizGenerationScreen.id,
-        arguments: {
-          'text': text,
-          'fileName': file.name,
-        },
-      );
-
     } catch (e) {
       if (kDebugMode) {
         print('Error reading PDF: $e');
@@ -126,7 +89,7 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
         actions: [
           PopupMenuButton<Locale>(
             icon: const Icon(Icons.language),
-            onSelected: (Locale locale) async {
+            onSelected: (locale) async {
               await context.setLocale(locale);
               if (mounted) {
                 setState(() {});
@@ -186,7 +149,7 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
               else
                 ElevatedButton.icon(
                   onPressed: uploadAndReadPDF,
-                  icon: const Icon(Icons.upload_file, size: 24, color: Colors.white),
+                  icon: const Icon(Icons.upload_file),
                   label: Text(AppStrings.uploadPdf.tr()),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),

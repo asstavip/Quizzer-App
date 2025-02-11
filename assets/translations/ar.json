@@ -33,5 +33,10 @@
   "correctAnswerLabel": "الإجابة الصحيحة:",
   "explanationLabel": "التفسير:",
   "questionDetailsTitlePrefix": "السؤال",
-  "pdfOnlyFiles": "يُسمح فقط بملفات PDF"
+  "pdfOnlyFiles": "ملفات PDF فقط",
+  "selectPages": "اختر الصفحات",
+  "generateQuizSelected": "إنشاء اختبار",
+  "selectAll": "اختيار الكل",
+  "clearSelection": "مسح",
+  "page": "صفحة"
 }

@@ -16,23 +16,16 @@ Future<void> main() async {
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('fr'), Locale('ar')],
-      path: 'assets/translations',
+      path: 'assets/translations', // path to your translation files
       fallbackLocale: const Locale('en'),
-      saveLocale: true, // Add this to persist the locale
-      useOnlyLangCode: true, // Add this to use only language code
       child: const MyApp(),
     ),
   );
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -43,16 +36,33 @@ class _MyAppState extends State<MyApp> {
       supportedLocales: context.supportedLocales,
       localizationsDelegates: context.localizationDelegates,
       initialRoute: PdfUploadScreen.id,
-      routes: {
-        PdfUploadScreen.id: (context) =>
-            const AnimatedWrapper(child: PdfUploadScreen()),
-        QuizGenerationScreen.id: (context) =>
-            const AnimatedWrapper(child: QuizGenerationScreen()),
-        QuizScreen.id: (context) => const AnimatedWrapper(child: QuizScreen()),
-        QuizReviewScreen.id: (context) =>
-            const AnimatedWrapper(child: QuizReviewScreen()),
-        AnswerDetailScreen.id: (context) =>
-            const AnimatedWrapper(child: AnswerDetailScreen()),
+      onGenerateRoute: (settings) {
+        if (settings.name == PdfUploadScreen.id) {
+          return MaterialPageRoute(
+            builder: (context) => const AnimatedWrapper(child: PdfUploadScreen()),
+          );
+        } else if (settings.name == QuizGenerationScreen.id) {
+          return MaterialPageRoute(
+            builder: (context) => const AnimatedWrapper(child: QuizGenerationScreen()),
+            settings: settings,
+          );
+        } else if (settings.name == QuizScreen.id) {
+          return MaterialPageRoute(
+            builder: (context) => const AnimatedWrapper(child: QuizScreen()),
+            settings: settings,
+          );
+        } else if (settings.name == QuizReviewScreen.id) {
+          return MaterialPageRoute(
+            builder: (context) => const AnimatedWrapper(child: QuizReviewScreen()),
+            settings: settings,
+          );
+        } else if (settings.name == AnswerDetailScreen.id) {
+          return MaterialPageRoute(
+            builder: (context) => const AnimatedWrapper(child: AnswerDetailScreen()),
+            settings: settings,
+          );
+        }
+        return null;
       },
     );
   }
