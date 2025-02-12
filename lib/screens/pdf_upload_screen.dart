@@ -149,7 +149,7 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
               else
                 ElevatedButton.icon(
                   onPressed: uploadAndReadPDF,
-                  icon: const Icon(Icons.upload_file),
+                  icon: const Icon(Icons.upload_file,size: 28,color: Colors.white,),
                   label: Text(AppStrings.uploadPdf.tr()),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
