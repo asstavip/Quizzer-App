@@ -113,16 +113,17 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                     pageFling: true,
                     pageSnap: true,
                     defaultPage: 0,
-                    fitPolicy: FitPolicy.BOTH,
+                    fitPolicy: FitPolicy.WIDTH,
+                    fitEachPage: true,
                     preventLinkNavigation: false,
                     onPageChanged: (page, total) {
                       setState(() {
                         _currentPage = page! + 1;
                       });
                     },
-                    onRender: (_pages) {
+                    onRender: (pages) {
                       setState(() {
-                        _totalPages = _pages!;
+                        _totalPages = pages!;
                       });
                     },
                     onError: (error) {
@@ -147,6 +148,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
+                  // ignore: deprecated_member_use
                   color: Colors.grey.withOpacity(0.2),
                   spreadRadius: 1,
                   blurRadius: 3,

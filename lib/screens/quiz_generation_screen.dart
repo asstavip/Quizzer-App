@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:pdf_uploader/screens/quiz_screen.dart';
-import 'package:pdf_uploader/theme/app_theme.dart';
 import 'package:pdf_uploader/utils/strings.dart';
 import 'package:easy_localization/easy_localization.dart';
 
