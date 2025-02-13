@@ -7,19 +7,65 @@ class AnswerDetailScreen extends StatelessWidget {
 
   const AnswerDetailScreen({super.key});
 
+  String _formatAnswer(dynamic answer, Map<String, dynamic> question) {
+    if (answer == null) return AppStrings.noAnswer.tr();
+    
+    if (question['type'] == 'truefalse') {
+      return answer.toString().tr();
+    } else {
+      final options = question['options'] as List;
+      final answerText = options.firstWhere(
+        (option) => option.startsWith('$answer)'),
+        orElse: () => '$answer)',
+      );
+      return answerText;
+    }
+  }
+
+  Widget _buildOptionItem(String option, String correctAnswer, String? userAnswer) {
+    final isCorrectAnswer = option.startsWith('$correctAnswer)');
+    final isUserAnswer = userAnswer != null && option.startsWith('$userAnswer)');
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              option,
+              softWrap: true,
+              style: TextStyle(
+                height: 1.5,
+                color: isCorrectAnswer 
+                    ? Colors.green 
+                    : (isUserAnswer && !isCorrectAnswer ? Colors.red : null),
+                fontWeight: isCorrectAnswer || isUserAnswer ? FontWeight.bold : null,
+              ),
+            ),
+          ),
+          if (isCorrectAnswer)
+            const Icon(Icons.check_circle, color: Colors.green, size: 20)
+          else if (isUserAnswer)
+            const Icon(Icons.cancel, color: Colors.red, size: 20),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final question = args['question'];
-    final bool? userAnswer = args['userAnswer'];
+    final dynamic userAnswer = args['userAnswer'];
     final int questionNumber = args['questionNumber'];
-    final bool correctAnswer = question['questionAnswer'];
+    final dynamic correctAnswer = question['questionAnswer'];
     final bool isCorrect = userAnswer == correctAnswer;
     final String explanation = question['explanation'] ?? 'No explanation available';
+    final bool isMultiChoice = question['type'] == 'multichoice';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${AppStrings.questionDetailsTitlePrefix.tr()} $questionNumber Details'),
+        title: Text('${AppStrings.questionDetailsTitlePrefix.tr()} $questionNumber'),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -43,6 +89,23 @@ class AnswerDetailScreen extends StatelessWidget {
                         question['questionText'],
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
+                      if (isMultiChoice) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          'Options:',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        ...List<Widget>.from(
+                          (question['options'] as List).map(
+                            (option) => _buildOptionItem(
+                              option, 
+                              correctAnswer, 
+                              userAnswer
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -72,14 +135,13 @@ class AnswerDetailScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        userAnswer == null
-                            ? AppStrings.noAnswer.tr()
-                            : userAnswer.toString(),
+                        _formatAnswer(userAnswer, question),
                         style: TextStyle(
                           fontSize: 18,
                           color: userAnswer == null ? Colors.orange : Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
+                        softWrap: true,
                       ),
                     ],
                   ),
@@ -110,11 +172,12 @@ class AnswerDetailScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        correctAnswer.toString(),
+                        _formatAnswer(correctAnswer, question),
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
+                        softWrap: true,
                       ),
                     ],
                   ),
@@ -147,8 +210,9 @@ class AnswerDetailScreen extends StatelessWidget {
                       Text(
                         explanation,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              height: 1.5,
-                            ),
+                          height: 1.5,
+                        ),
+                        softWrap: true,
                       ),
                     ],
                   ),

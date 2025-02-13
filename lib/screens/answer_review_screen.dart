@@ -8,11 +8,36 @@ class QuizReviewScreen extends StatelessWidget {
 
   const QuizReviewScreen({super.key});
 
+  String _formatAnswer(dynamic answer, Map<String, dynamic> question) {
+    if (answer == null) return AppStrings.timesUp.tr();
+    
+    if (question['type'] == 'truefalse') {
+      return answer.toString().tr();
+    } else {
+      // For multiple choice, show the full option text for the selected answer
+      final options = question['options'] as List;
+      final answerText = options.firstWhere(
+        (option) => option.startsWith('$answer)'),
+        orElse: () => '$answer)',
+      );
+      return answerText;
+    }
+  }
+
+  bool _isAnswerCorrect(dynamic userAnswer, Map<String, dynamic> question) {
+    if (userAnswer == null) return false;
+    if (question['type'] == 'truefalse') {
+      return userAnswer == question['questionAnswer'];
+    } else {
+      return userAnswer == question['questionAnswer'];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final List<Map<String, dynamic>> questions = args['questions'];
-    final List<bool?> userAnswers = args['userAnswers'];
+    final List<dynamic> userAnswers = args['userAnswers'];
     final int score = args['score'];
 
     return Scaffold(
@@ -35,7 +60,8 @@ class QuizReviewScreen extends StatelessWidget {
         itemBuilder: (context, index) {
           final question = questions[index];
           final userAnswer = userAnswers[index];
-          final bool isCorrect = userAnswer == question['questionAnswer'];
+          final bool isCorrect = _isAnswerCorrect(userAnswer, question);
+          final String formattedAnswer = _formatAnswer(userAnswer, question);
 
           return Card(
             margin: const EdgeInsets.all(8.0),
@@ -49,20 +75,26 @@ class QuizReviewScreen extends StatelessWidget {
                 '${AppStrings.questionNumberText.tr()} ${index + 1}',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: Text(question['questionText']),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    userAnswer == null ? AppStrings.timesUp.tr() : userAnswer.toString(),
+                    question['questionText'],
+                    softWrap: true,
+                    overflow: TextOverflow.visible,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    formattedAnswer,
                     style: TextStyle(
                       color: userAnswer == null ? Colors.orange : Colors.black,
                       fontWeight: FontWeight.bold,
                     ),
+                    softWrap: true,
                   ),
-                  const Icon(Icons.chevron_right),
                 ],
               ),
+              trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 Navigator.pushNamed(
                   context,

@@ -10,18 +10,21 @@ import 'package:pdf_uploader/utils/strings.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 enum QuizDifficulty { easy, medium, hard }
+enum QuizType { truefalse, multichoice }
 
 class QuizSettings {
   final int questionCount;
   final QuizDifficulty difficulty;
   final bool timedMode;
   final int timePerQuestion;
+  final QuizType quizType;
 
   QuizSettings({
     required this.questionCount,
     required this.difficulty,
     required this.timedMode,
     required this.timePerQuestion,
+    required this.quizType,
   });
 }
 
@@ -37,6 +40,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
   bool isLoading = false;
   int selectedQuestionCount = 5;
   QuizDifficulty selectedDifficulty = QuizDifficulty.easy;
+  QuizType selectedQuizType = QuizType.truefalse;
   bool timedModeEnabled = false;
   int timePerQuestion = 30;
 
@@ -51,44 +55,128 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
     }
   }
 
+  String _getQuizTypePrompt() {
+    if (selectedQuizType == QuizType.truefalse) {
+      return """Generate exactly $selectedQuestionCount true/false questions without any headers or markdown formatting.
+              The questions must be in the same language as the provided text.
+              Return a valid JSON array in this exact format:
+              [
+                {
+                  "question": "Question text here",
+                  "answer": true/false,
+                  "explanation": "Explanation why"
+                }
+              ]""";
+    } else {
+      return """Generate exactly $selectedQuestionCount multiple choice questions without any headers or markdown formatting.
+              The questions must be in the same language as the provided text.
+              Return a valid JSON array in this exact format:
+              [
+                {
+                  "question": "Question text here",
+                  "options": ["A) First option", "B) Second option", "C) Third option", "D) Fourth option"],
+                  "correctAnswer": "A",
+                  "explanation": "Explanation why"
+                }
+              ]""";
+    }
+  }
+
   List<Map<String, dynamic>> _parseQuestions(String jsonText) {
     try {
-      try {
-        final List<dynamic> jsonArray = jsonDecode(jsonText);
-        return _validateAndTransformQuestions(jsonArray);
-      } catch (e) {
+      // Clean up any markdown or formatting
+      String cleanedText = jsonText
+          .replaceAll(RegExp(r'\*\*.*?\*\*'), '') // Remove **headers**
+          .replaceAll(RegExp(r'#+\s.*'), '') // Remove markdown headers
+          .replaceAll(RegExp(r'```(?:json)?'), '') // Remove code blocks
+          .replaceAll('`', '') // Remove backticks
+          .trim();
+          
+      // Find the first [ and last ] to extract just the JSON array
+      int startIndex = cleanedText.indexOf('[');
+      int endIndex = cleanedText.lastIndexOf(']') + 1;
+      
+      if (startIndex == -1 || endIndex == 0) {
         if (kDebugMode) {
-          print('Failed to parse as array, trying line by line: $e');
+          print('No valid JSON array found in response: $cleanedText');
         }
-        return _parseQuestionsLineByLine(jsonText);
+        return _parseQuestionsLineByLine(cleanedText);
       }
+      
+      cleanedText = cleanedText.substring(startIndex, endIndex);
+      // Clean up any trailing commas in arrays and objects
+      cleanedText = cleanedText
+          .replaceAll(RegExp(r',(\s*[}\]])', multiLine: true), r'$1')
+          .replaceAll(RegExp(r'\n\s*'), ' ');
+
+      if (kDebugMode) {
+        print('Cleaned JSON text: $cleanedText');
+      }
+
+      final List<dynamic> jsonArray = jsonDecode(cleanedText);
+      return _validateAndTransformQuestions(jsonArray);
     } catch (e) {
-      throw FormatException('Failed to parse questions: $e');
+      if (kDebugMode) {
+        print('Failed to parse as array, trying line by line: $e');
+      }
+      return _parseQuestionsLineByLine(jsonText);
     }
   }
 
   List<Map<String, dynamic>> _parseQuestionsLineByLine(String text) {
     final List<Map<String, dynamic>> questions = [];
-    final lines = text
-        .split('\n')
+    final lines = text.split('\n')
         .where((line) => line.trim().isNotEmpty)
         .map((line) => line.trim())
         .toList();
 
+    String currentJson = '';
+    bool inJsonObject = false;
+    int bracketCount = 0;
+
     for (final line in lines) {
-      try {
-        if (line.startsWith('{') && line.endsWith('}')) {
-          final Map<String, dynamic> question = jsonDecode(line);
-          if (_isValidQuestionFormat(question)) {
-            questions.add(_transformQuestion(question));
+      if (line.contains('{')) {
+        if (!inJsonObject) {
+          currentJson = '';
+          inJsonObject = true;
+        }
+        bracketCount += line.split('{').length - 1;
+      }
+      
+      if (inJsonObject) {
+        currentJson += line;
+      }
+      
+      if (line.contains('}')) {
+        bracketCount -= line.split('}').length - 1;
+        if (bracketCount == 0) {
+          try {
+            // Clean up any trailing commas and normalize JSON
+            currentJson = currentJson
+                .replaceAll(RegExp(r',\s*}'), '}')
+                .replaceAll(RegExp(r',\s*]'), ']')
+                .replaceAll(RegExp(r'\s+'), ' ');
+
+            if (kDebugMode) {
+              print('Processing JSON object: $currentJson');
+            }
+
+            final Map<String, dynamic> question = jsonDecode(currentJson);
+            
+            if (_isValidQuestionFormat(question)) {
+              questions.add(_transformQuestion(question));
+            } else if (kDebugMode) {
+              print('Invalid question format detected: $currentJson');
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              print('Failed to parse JSON object: $e');
+              print('Line content: $currentJson');
+            }
           }
+          currentJson = '';
+          inJsonObject = false;
         }
-      } catch (e) {
-        if (kDebugMode) {
-          print('Failed to parse line: $e');
-          print('Line content: $line');
-        }
-        continue;
       }
     }
 
@@ -100,20 +188,83 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
   }
 
   bool _isValidQuestionFormat(Map<String, dynamic> question) {
-    return question.containsKey('question') &&
-        question.containsKey('answer') &&
-        question.containsKey('explanation') &&
-        question['question'] is String &&
-        question['answer'] is bool &&
-        question['explanation'] is String;
+    if (selectedQuizType == QuizType.truefalse) {
+      return question.containsKey('question') &&
+          question.containsKey('answer') &&
+          question.containsKey('explanation') &&
+          question['question'] is String &&
+          question['answer'] is bool &&
+          question['explanation'] is String;
+    } else {
+      if (!question.containsKey('question') ||
+          !question.containsKey('options') ||
+          !question.containsKey('correctAnswer') ||
+          !question.containsKey('explanation')) {
+        return false;
+      }
+
+      if (!(question['question'] is String) ||
+          !(question['options'] is List) ||
+          !(question['correctAnswer'] is String) ||
+          !(question['explanation'] is String)) {
+        return false;
+      }
+
+      final options = List<String>.from(question['options']);
+      if (options.length != 4) {
+        return false;
+      }
+
+      // Check if options start with A), B), C), D)
+      final expectedPrefixes = ['A)', 'B)', 'C)', 'D)'];
+      if (!options.every((opt) => 
+          expectedPrefixes.any((prefix) => opt.trim().startsWith(prefix)))) {
+        return false;
+      }
+
+      // Check if correctAnswer is a single letter A, B, C, or D
+      final correctAnswer = question['correctAnswer'];
+      if (!RegExp(r'^[A-D]$').hasMatch(correctAnswer)) {
+        return false;
+      }
+
+      return true;
+    }
   }
 
   Map<String, dynamic> _transformQuestion(Map<String, dynamic> rawQuestion) {
-    return {
-      "questionText": rawQuestion['question'],
-      "questionAnswer": rawQuestion['answer'],
-      "explanation": rawQuestion['explanation'],
-    };
+    if (selectedQuizType == QuizType.truefalse) {
+      return {
+        "questionText": rawQuestion['question'],
+        "questionAnswer": rawQuestion['answer'],
+        "explanation": rawQuestion['explanation'],
+        "type": "truefalse"
+      };
+    } else {
+      // Create a list of options with their original indices
+      final List<String> originalOptions = List<String>.from(rawQuestion['options']);
+      final String correctAnswer = rawQuestion['correctAnswer'];
+      
+      // Find the original option that starts with the correct answer letter
+      final String correctOptionText = originalOptions
+          .firstWhere((opt) => opt.startsWith('$correctAnswer)'));
+      
+      // Create shuffled options
+      final List<String> shuffledOptions = List<String>.from(originalOptions);
+      shuffledOptions.shuffle();
+      
+      // Find new position of correct answer after shuffle
+      final int newIndex = shuffledOptions.indexOf(correctOptionText);
+      final String newCorrectAnswer = String.fromCharCode(65 + newIndex); // Convert 0->A, 1->B, etc.
+      
+      return {
+        "questionText": rawQuestion['question'],
+        "options": shuffledOptions,
+        "questionAnswer": newCorrectAnswer,
+        "explanation": rawQuestion['explanation'],
+        "type": "multichoice"
+      };
+    }
   }
 
   List<Map<String, dynamic>> _validateAndTransformQuestions(List<dynamic> jsonArray) {
@@ -165,22 +316,12 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
           "contents": [
             {
               "parts": [
-                {"text": """${_getDifficultyPrompt()}
-                Based on this text: $text
-                Generate exactly $selectedQuestionCount true/false questions.
-                The questions must be in the same language as the provided text.
-                For each question, provide:
-                1. The question statement
-                2. Whether it is true or false
-                3. A brief explanation of why the answer is correct
-                Return the response as a JSON array of objects with this exact format:
-                [
-                  {
-                    "question": "Question text here",
-                    "answer": true/false,
-                    "explanation": "Explanation of why the answer is true/false"
-                  }
-                ]"""}
+                {
+                  "text": """Return only a valid JSON array without any additional formatting or text.
+                  ${_getDifficultyPrompt()}
+                  ${_getQuizTypePrompt()}
+                  Based on this text: $text"""
+                }
               ]
             }
           ],
@@ -189,6 +330,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
             "topK": 1,
             "topP": 1,
             "maxOutputTokens": 2048,
+            "stopSequences": ["**", "#"]
           },
         }),
       ).timeout(const Duration(seconds: 60));
@@ -233,6 +375,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
             difficulty: selectedDifficulty,
             timedMode: timedModeEnabled,
             timePerQuestion: timePerQuestion,
+            quizType: selectedQuizType,
           ),
         };
 
@@ -296,6 +439,42 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
                       Text(
                         '$selectedQuestionCount ${AppStrings.questionsLabel.tr()}',
                         style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Quiz Type',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      SegmentedButton<QuizType>(
+                        segments: [
+                          ButtonSegment<QuizType>(
+                            value: QuizType.truefalse,
+                            label: const Text('True/False'),
+                            icon: const Icon(Icons.check_circle_outline),
+                          ),
+                          ButtonSegment<QuizType>(
+                            value: QuizType.multichoice,
+                            label: const Text('Multiple Choice'),
+                            icon: const Icon(Icons.format_list_bulleted),
+                          ),
+                        ],
+                        selected: {selectedQuizType},
+                        onSelectionChanged: (Set<QuizType> newSelection) {
+                          setState(() {
+                            selectedQuizType = newSelection.first;
+                          });
+                        },
                       ),
                     ],
                   ),
