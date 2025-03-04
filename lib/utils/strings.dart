@@ -62,4 +62,14 @@ class AppStrings {
   static const String selectAll = 'selectAll';
   static const String clearSelection = 'clearSelection';
   static const String page = 'page';
+
+  // ...existing code...
+  static const String startPage = 'startPage';
+  static const String endPage = 'endPage';
+  static const String to = 'to';
+  static const String pageRange = 'pageRange';
+  static const String addRange = 'addRange';
+  static const String cancel = 'cancel';
+  static const String invalidPageRange = 'invalidPageRange';
+// ...existing code...
 }

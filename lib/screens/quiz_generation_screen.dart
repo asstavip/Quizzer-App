@@ -10,6 +10,7 @@ import 'package:pdf_uploader/utils/strings.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 enum QuizDifficulty { easy, medium, hard }
+
 enum QuizType { truefalse, multichoice }
 
 class QuizSettings {
@@ -50,11 +51,17 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
     String difficultyPrompt;
     switch (selectedDifficulty) {
       case QuizDifficulty.easy:
-        difficultyPrompt = selectedQuizType == QuizType.truefalse ? AppStrings.easyPrompt : AppStrings.easyPromptMultiple;
+        difficultyPrompt = selectedQuizType == QuizType.truefalse
+            ? AppStrings.easyPrompt
+            : AppStrings.easyPromptMultiple;
       case QuizDifficulty.medium:
-        difficultyPrompt = selectedQuizType == QuizType.truefalse ? AppStrings.mediumPrompt : AppStrings.mediumPromptMultiple;
+        difficultyPrompt = selectedQuizType == QuizType.truefalse
+            ? AppStrings.mediumPrompt
+            : AppStrings.mediumPromptMultiple;
       case QuizDifficulty.hard:
-        difficultyPrompt = selectedQuizType == QuizType.truefalse ? AppStrings.hardPrompt : AppStrings.hardPromptMultiple;
+        difficultyPrompt = selectedQuizType == QuizType.truefalse
+            ? AppStrings.hardPrompt
+            : AppStrings.hardPromptMultiple;
     }
 
     // Quiz type part
@@ -105,7 +112,8 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
         throw const FormatException('No valid JSON array found');
       }
 
-      cleanedText = cleanedText.substring(startIndex, endIndex)
+      cleanedText = cleanedText
+          .substring(startIndex, endIndex)
           .replaceAll(RegExp(r',(\s*[}\]])', multiLine: true), r' ')
           .replaceAll(RegExp(r'\n\s*'), ' ');
       if (kDebugMode) {
@@ -176,24 +184,28 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
       final url = Uri.parse(
           'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=$apiKey');
       print(_getPrompt());
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "contents": [{
-            "parts": [{
-              "text": "${_getPrompt()} Based on this text: $text"
-            }]
-          }],
-          "generationConfig": {
-            "temperature": 0.3,
-            "topK": 1,
-            "topP": 1,
-            "maxOutputTokens": 2048,
-            "stopSequences": ["**", "#"]
-          },
-        }),
-      ).timeout(const Duration(seconds: 60));
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              "contents": [
+                {
+                  "parts": [
+                    {"text": "${_getPrompt()} Based on this text: $text"}
+                  ]
+                }
+              ],
+              "generationConfig": {
+                "temperature": 0.3,
+                "topK": 1,
+                "topP": 1,
+                "maxOutputTokens": 2048,
+                "stopSequences": ["**", "#"]
+              },
+            }),
+          )
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -202,7 +214,8 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
           throw Exception('Invalid API response format');
         }
 
-        String generatedText = data['candidates'][0]['content']['parts'][0]['text'] as String;
+        String generatedText =
+            data['candidates'][0]['content']['parts'][0]['text'] as String;
         final questionList = _processResponse(generatedText);
 
         if (questionList.isEmpty) {
@@ -245,7 +258,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> extractedData =
-    ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
 
     return Scaffold(
       appBar: AppBar(title: Text(AppStrings.quizSettings.tr())),
@@ -263,16 +276,17 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
             _buildTimedModeCard(),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: isLoading ? null : () => generateQuestions(extractedData),
+              onPressed:
+                  isLoading ? null : () => generateQuestions(extractedData),
               icon: isLoading
                   ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 3,
-                ),
-              )
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 3,
+                      ),
+                    )
                   : const Icon(Icons.quiz, size: 24, color: Colors.white),
               label: Text(isLoading
                   ? AppStrings.generating.tr()
@@ -287,6 +301,8 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
   // UI Components
   Widget _buildQuestionCountCard() {
     return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -318,8 +334,12 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
     );
   }
 
+  // Custom slider thumb shape with question count display
+
   Widget _buildQuizTypeCard() {
     return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -329,26 +349,53 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
               'Quiz Type',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 8),
-            SegmentedButton<QuizType>(
-              segments: const [
-                ButtonSegment<QuizType>(
-                  value: QuizType.truefalse,
-                  label: Text('True/False'),
-                  icon: Icon(Icons.check_circle_outline),
-                ),
-                ButtonSegment<QuizType>(
-                  value: QuizType.multichoice,
-                  label: Text('Multiple Choice'),
-                  icon: Icon(Icons.format_list_bulleted),
-                ),
-              ],
-              selected: {selectedQuizType},
-              onSelectionChanged: (Set<QuizType> newSelection) {
-                setState(() {
-                  selectedQuizType = newSelection.first;
-                });
-              },
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.all(4),
+              child: Stack(
+                children: [
+                  // Animated selection indicator
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    left: selectedQuizType == QuizType.truefalse
+                        ? 0
+                        : MediaQuery.of(context).size.width / 2 - 48,
+                    top: 0,
+                    bottom: 0,
+                    width: MediaQuery.of(context).size.width / 2 - 32,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  // Buttons
+                  Row(
+                    children: [
+                      _buildTabOption(
+                        label: 'True/False',
+                        icon: Icons.check_circle_outline,
+                        isSelected: selectedQuizType == QuizType.truefalse,
+                        onTap: () => setState(
+                            () => selectedQuizType = QuizType.truefalse),
+                      ),
+                      _buildTabOption(
+                        label: 'Multiple Choice',
+                        icon: Icons.format_list_bulleted,
+                        isSelected: selectedQuizType == QuizType.multichoice,
+                        onTap: () => setState(
+                            () => selectedQuizType = QuizType.multichoice),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -356,8 +403,44 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
     );
   }
 
+  Widget _buildTabOption({
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? Colors.white : Colors.grey.shade700,
+                size: 20,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.grey.shade700,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildDifficultyCard() {
     return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -367,33 +450,83 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
               AppStrings.difficultyLevel.tr(),
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 8),
-            SegmentedButton<QuizDifficulty>(
-              segments: [
-                ButtonSegment<QuizDifficulty>(
-                  value: QuizDifficulty.easy,
-                  label: Text(AppStrings.easy.tr()),
-                  icon: const Icon(Icons.sentiment_satisfied),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                _buildDifficultyOption(
+                  label: AppStrings.easy.tr(),
+                  icon: Icons.sentiment_satisfied,
+                  color: Colors.green,
+                  isSelected: selectedDifficulty == QuizDifficulty.easy,
+                  onTap: () =>
+                      setState(() => selectedDifficulty = QuizDifficulty.easy),
                 ),
-                ButtonSegment<QuizDifficulty>(
-                  value: QuizDifficulty.medium,
-                  label: Text(AppStrings.medium.tr()),
-                  icon: const Icon(Icons.sentiment_neutral),
+                _buildDifficultyOption(
+                  label: AppStrings.medium.tr(),
+                  icon: Icons.sentiment_neutral,
+                  color: Colors.orange,
+                  isSelected: selectedDifficulty == QuizDifficulty.medium,
+                  onTap: () => setState(
+                      () => selectedDifficulty = QuizDifficulty.medium),
                 ),
-                ButtonSegment<QuizDifficulty>(
-                  value: QuizDifficulty.hard,
-                  label: Text(AppStrings.hard.tr()),
-                  icon: const Icon(Icons.sentiment_very_dissatisfied),
+                _buildDifficultyOption(
+                  label: AppStrings.hard.tr(),
+                  icon: Icons.sentiment_very_dissatisfied,
+                  color: Colors.red,
+                  isSelected: selectedDifficulty == QuizDifficulty.hard,
+                  onTap: () =>
+                      setState(() => selectedDifficulty = QuizDifficulty.hard),
                 ),
               ],
-              selected: {selectedDifficulty},
-              onSelectionChanged: (Set<QuizDifficulty> newSelection) {
-                setState(() {
-                  selectedDifficulty = newSelection.first;
-                });
-              },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDifficultyOption({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? color.withOpacity(0.2) : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? color : Colors.grey.shade300,
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? color : Colors.grey.shade600,
+                size: 24,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color:
+                      isSelected ? Colors.grey.shade700 : Colors.grey.shade700,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
