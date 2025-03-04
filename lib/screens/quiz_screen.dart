@@ -6,6 +6,8 @@ import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:pdf_uploader/utils/strings.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'answer_review_screen.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/services.dart';
 
 class QuizScreen extends StatefulWidget {
   static const String id = 'quiz';
@@ -16,6 +18,7 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
+  AudioPlayer? audioPlayer;
   List<Map<String, dynamic>>? questions;
   int questionIndex = 0;
   int score = 0;
@@ -25,10 +28,16 @@ class _QuizScreenState extends State<QuizScreen> {
   Color answerColor = Colors.white;
   dynamic userAnswers;
   String? selectedAnswer;
-
+  
   Timer? questionTimer;
   int remainingTime = 0;
   bool isTimeUp = false;
+
+  @override
+  void initState() {
+    super.initState();
+    audioPlayer = AudioPlayer();
+  }
 
   @override
   void didChangeDependencies() {
@@ -84,6 +93,9 @@ class _QuizScreenState extends State<QuizScreen> {
       isCorrect = userChoice == currentQuestion['questionAnswer'];
     }
 
+    // Add haptic feedback
+    HapticFeedback.mediumImpact();
+
     setState(() {
       isAnswered = true;
       isProcessingAnswer = true;
@@ -91,9 +103,11 @@ class _QuizScreenState extends State<QuizScreen> {
       selectedAnswer = userChoice is String ? userChoice : null;
 
       if (isCorrect) {
+        audioPlayer?.play(AssetSource('sounds/correct.mp3'));
         score++;
         answerColor = AppTheme.customColors['success']!;
       } else {
+        audioPlayer?.play(AssetSource('sounds/incorrect.mp3'));
         answerColor = AppTheme.customColors['error']!;
       }
     });
@@ -253,6 +267,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   void dispose() {
+    audioPlayer?.dispose();
     questionTimer?.cancel();
     super.dispose();
   }

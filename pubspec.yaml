@@ -26,6 +26,7 @@ dependencies:
   rflutter_alert: ^2.0.7
   syncfusion_flutter_pdf: ^24.2.9
   toasty_box: ^1.0.4
+  audioplayers: ^6.2.0
 
 flutter_launcher_icons:
   android: "launcher_icon"
@@ -46,3 +47,4 @@ flutter:
     - .env
     - assets/translations/
     - assets/translations/en.json
+    - assets/sounds/
