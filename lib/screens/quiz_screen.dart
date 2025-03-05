@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:pdf_uploader/domain/quiz_history.dart';
 import 'package:pdf_uploader/screens/quiz_generation_screen.dart';
+import 'package:pdf_uploader/screens/quiz_history_screen.dart';
 import 'package:pdf_uploader/theme/app_theme.dart';
 import 'dart:async';
 // import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:pdf_uploader/utils/strings.dart';
 import 'package:easy_localization/easy_localization.dart';
+
 import 'answer_review_screen.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
+import '../services/history_service.dart';
 
 class QuizScreen extends StatefulWidget {
   static const String id = 'quiz';
@@ -32,6 +36,9 @@ class _QuizScreenState extends State<QuizScreen> {
   Timer? questionTimer;
   int remainingTime = 0;
   bool isTimeUp = false;
+
+  bool _quizSaved = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -157,7 +164,8 @@ class _QuizScreenState extends State<QuizScreen> {
             child: Container(
               decoration: BoxDecoration(
                 color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
@@ -168,7 +176,8 @@ class _QuizScreenState extends State<QuizScreen> {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: AppTheme.customColors['success']!.withOpacity(0.1),
+                        color:
+                            AppTheme.customColors['success']!.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -180,9 +189,10 @@ class _QuizScreenState extends State<QuizScreen> {
                     const SizedBox(height: 24),
                     Text(
                       AppStrings.quizCompleteTitle.tr(),
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -197,7 +207,8 @@ class _QuizScreenState extends State<QuizScreen> {
                         Expanded(
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.customColors['secondary'],
+                              backgroundColor:
+                                  AppTheme.customColors['secondary'],
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
                             onPressed: () => Navigator.pushNamed(
@@ -228,6 +239,56 @@ class _QuizScreenState extends State<QuizScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
+                    // New save quiz history button
+                    if (!_quizSaved)
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 24),
+                        ),
+                        onPressed: _isSaving
+                            ? null
+                            : () {
+                                _saveQuizToHistory();
+                                Navigator.pushNamed(
+                                    context, (QuizHistoryScreen.id));
+                              },
+                        icon: _isSaving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.history),
+                        label: Text(AppStrings.saveQuiz.tr()),
+                      )
+                    else
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.check_circle_outline,
+                              color: Colors.teal,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              AppStrings.quizSaved.tr(),
+                              style: const TextStyle(
+                                color: Colors.teal,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -237,6 +298,7 @@ class _QuizScreenState extends State<QuizScreen> {
       ),
     );
   }
+
   Widget _buildAnswerButtons() {
     final currentQuestion = questions![questionIndex];
 
@@ -415,5 +477,50 @@ class _QuizScreenState extends State<QuizScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _saveQuizToHistory() async {
+    if (_quizSaved) return; // Prevent multiple saves
+
+    setState(() {
+      _isSaving = true; // Show loading state
+      _quizSaved = true; // Set quiz saved state
+    });
+
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final settings = args['settings'];
+    final pdfName = args['fileName'] ?? 'Unknown PDF';
+
+    final quizType = settings.quizType.toString().split('.').last;
+    final difficulty = settings.difficulty.toString().split('.').last;
+
+    final quizHistory = QuizHistory(
+      date: DateTime.now().toString(),
+      score: score,
+      totalQuestions: questions!.length,
+      quizType: quizType,
+      difficulty: difficulty,
+      pdfName: pdfName,
+      questionsData: questions, // Store complete quiz data
+      userAnswers: userAnswers, // Add user answers
+    );
+
+    final saved = await HistoryService.saveQuizHistory(quizHistory);
+
+    if (mounted) {
+      setState(() {
+        _quizSaved = true;
+        _isSaving = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.quizSaved.tr()),
+          backgroundColor: Colors.teal,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 }

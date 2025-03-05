@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:pdf_uploader/screens/pdf_preview_screen.dart';
+import 'package:pdf_uploader/screens/quiz_history_screen.dart';
 import 'package:pdf_uploader/theme/app_theme.dart';
 import 'package:aura_box/aura_box.dart';
 import 'package:pdf_uploader/utils/strings.dart';
@@ -20,7 +21,7 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
 
   void _showSnackBar(String message, bool isError) {
     if (!mounted) return;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -47,7 +48,7 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
       if (result != null && result.files.isNotEmpty) {
         final file = result.files.first;
         final bytes = file.bytes;
-        
+
         if (bytes == null) {
           throw Exception('Could not read file data');
         }
@@ -87,6 +88,13 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
       appBar: AppBar(
         title: Text(AppStrings.pdfQuizzerUploader.tr()),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: AppStrings.viewHistory.tr(),
+            onPressed: () {
+              Navigator.pushNamed(context, QuizHistoryScreen.id);
+            },
+          ),
           PopupMenuButton<Locale>(
             icon: const Icon(Icons.language),
             onSelected: (locale) async {
@@ -149,18 +157,23 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
               else
                 ElevatedButton.icon(
                   onPressed: uploadAndReadPDF,
-                  icon: const Icon(Icons.upload_file,size: 28,color: Colors.white,),
+                  icon: const Icon(
+                    Icons.upload_file,
+                    size: 28,
+                    color: Colors.white,
+                  ),
                   label: Text(AppStrings.uploadPdf.tr()),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 16),
                   ),
                 ),
               const SizedBox(height: 16),
               Text(
                 AppStrings.pdfOnlyFiles.tr(),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey,
-                ),
+                      color: Colors.grey,
+                    ),
               ),
             ],
           ),

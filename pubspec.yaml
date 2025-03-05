@@ -9,12 +9,13 @@ environment:
   sdk: ^3.5.4
 
 dependencies:
-  flutter:
-    sdk: flutter
+  audioplayers: ^6.2.0
   aura_box: ^1.0.1
   cupertino_icons: ^1.0.8
   easy_localization: ^3.0.0
-  file_picker: ^6.1.1
+  file_picker: ^9.0.2
+  flutter:
+    sdk: flutter
   flutter_dotenv: ^5.2.1
   flutter_launcher_icons: ^0.14.1
   flutter_pdf_text: ^0.7.0
@@ -24,14 +25,14 @@ dependencies:
   lottie: ^2.6.0
   path_provider: ^2.1.2
   rflutter_alert: ^2.0.7
+  shared_preferences: ^2.5.2
   syncfusion_flutter_pdf: ^24.2.9
   toasty_box: ^1.0.4
-  audioplayers: ^6.2.0
 
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "images/Pdf_Quizzer.png"
+  image_path: "images/pdf_quizzer.png"
   min_sdk_android: 16
   adaptive_icon_background: "#ffffff"
   adaptive_icon_foreground: "images/Pdf_Quizzer.png"

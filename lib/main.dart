@@ -8,6 +8,7 @@ import 'widgets/animated_wrapper.dart';
 import 'theme/app_theme.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'screens/quiz_history_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,11 +40,13 @@ class MyApp extends StatelessWidget {
       onGenerateRoute: (settings) {
         if (settings.name == PdfUploadScreen.id) {
           return MaterialPageRoute(
-            builder: (context) => const AnimatedWrapper(child: PdfUploadScreen()),
+            builder: (context) =>
+                const AnimatedWrapper(child: PdfUploadScreen()),
           );
         } else if (settings.name == QuizGenerationScreen.id) {
           return MaterialPageRoute(
-            builder: (context) => const AnimatedWrapper(child: QuizGenerationScreen()),
+            builder: (context) =>
+                const AnimatedWrapper(child: QuizGenerationScreen()),
             settings: settings,
           );
         } else if (settings.name == QuizScreen.id) {
@@ -53,12 +56,20 @@ class MyApp extends StatelessWidget {
           );
         } else if (settings.name == QuizReviewScreen.id) {
           return MaterialPageRoute(
-            builder: (context) => const AnimatedWrapper(child: QuizReviewScreen()),
+            builder: (context) =>
+                const AnimatedWrapper(child: QuizReviewScreen()),
             settings: settings,
           );
         } else if (settings.name == AnswerDetailScreen.id) {
           return MaterialPageRoute(
-            builder: (context) => const AnimatedWrapper(child: AnswerDetailScreen()),
+            builder: (context) =>
+                const AnimatedWrapper(child: AnswerDetailScreen()),
+            settings: settings,
+          );
+        } else if (settings.name == QuizHistoryScreen.id) {
+          return MaterialPageRoute(
+            builder: (context) =>
+                const AnimatedWrapper(child: QuizHistoryScreen()),
             settings: settings,
           );
         }

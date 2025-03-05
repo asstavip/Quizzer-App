@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:pdf_uploader/screens/quiz_screen.dart';
 import 'package:pdf_uploader/utils/strings.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:pdf_uploader/widgets/history_icon.dart';
 
 enum QuizDifficulty { easy, medium, hard }
 
@@ -233,6 +234,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
             timePerQuestion: timePerQuestion,
             quizType: selectedQuizType,
           ),
+          'fileName': extractedData['fileName'],
         });
       } else {
         final errorBody = jsonDecode(response.body);
@@ -261,7 +263,12 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppStrings.quizSettings.tr())),
+      appBar: AppBar(
+        title: Text(AppStrings.quizSettings.tr()),
+        actions: const [
+          HistoryIcon(), // Add this line
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

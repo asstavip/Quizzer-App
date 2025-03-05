@@ -49,13 +49,19 @@ class AppStrings {
   static const String questionDetailsTitlePrefix = 'questionDetailsTitlePrefix';
 
   // Difficulty prompts - These should not be translated as they are for API use
-  static const String easyPrompt = "Generate basic, straightforward true/false questions focusing on main concepts and explicit information from the text. Include simple explanations that directly reference the text.";
-  static const String mediumPrompt = "Generate moderately challenging true/false questions that require understanding relationships between concepts and implicit information from the text. Include explanations that show the logical connection between text elements.";
-  static const String hardPrompt = "Generate challenging true/false questions that require deep understanding, analysis, and connecting multiple concepts from the text. Include detailed explanations that demonstrate complex reasoning and multiple supporting points from the text.";
+  static const String easyPrompt =
+      "Generate basic, straightforward true/false questions focusing on main concepts and explicit information from the text. Include simple explanations that directly reference the text.";
+  static const String mediumPrompt =
+      "Generate moderately challenging true/false questions that require understanding relationships between concepts and implicit information from the text. Include explanations that show the logical connection between text elements.";
+  static const String hardPrompt =
+      "Generate challenging true/false questions that require deep understanding, analysis, and connecting multiple concepts from the text. Include detailed explanations that demonstrate complex reasoning and multiple supporting points from the text.";
 
-  static const String easyPromptMultiple = "Generate basic multiple-choice questions with 4 options (A, B, C, D) focusing on main concepts and explicit information from the text. Keep options clear and distinct. One option must be correct, and distractors should be plausible but clearly incorrect. Include simple explanations that directly reference the text.";
-  static const String mediumPromptMultiple = "Generate moderately challenging multiple-choice questions with 4 options (A, B, C, D) that require understanding relationships between concepts and implicit information. Options should test deeper comprehension, with well-crafted distractors based on common misconceptions. Include explanations that show the logical connection between text elements.";
-  static const String hardPromptMultiple = "Generate challenging multiple-choice questions with 4 options (A, B, C, D) that require deep understanding, analysis, and connecting multiple concepts. Create sophisticated distractors that test critical thinking and subtle distinctions. Include detailed explanations that demonstrate complex reasoning and multiple supporting points from the text.";
+  static const String easyPromptMultiple =
+      "Generate basic multiple-choice questions with 4 options (A, B, C, D) focusing on main concepts and explicit information from the text. Keep options clear and distinct. One option must be correct, and distractors should be plausible but clearly incorrect. Include simple explanations that directly reference the text.";
+  static const String mediumPromptMultiple =
+      "Generate moderately challenging multiple-choice questions with 4 options (A, B, C, D) that require understanding relationships between concepts and implicit information. Options should test deeper comprehension, with well-crafted distractors based on common misconceptions. Include explanations that show the logical connection between text elements.";
+  static const String hardPromptMultiple =
+      "Generate challenging multiple-choice questions with 4 options (A, B, C, D) that require deep understanding, analysis, and connecting multiple concepts. Create sophisticated distractors that test critical thinking and subtle distinctions. Include detailed explanations that demonstrate complex reasoning and multiple supporting points from the text.";
   // PDF Preview Screen texts
   static const String selectPages = 'selectPages';
   static const String generateQuizSelected = 'generateQuizSelected';
@@ -63,7 +69,6 @@ class AppStrings {
   static const String clearSelection = 'clearSelection';
   static const String page = 'page';
 
-  // ...existing code...
   static const String startPage = 'startPage';
   static const String endPage = 'endPage';
   static const String to = 'to';
@@ -71,5 +76,16 @@ class AppStrings {
   static const String addRange = 'addRange';
   static const String cancel = 'cancel';
   static const String invalidPageRange = 'invalidPageRange';
-// ...existing code...
+
+  static const String saveQuiz = 'saveQuiz';
+  static const String quizSaved = 'quizSaved';
+  static const String quizHistory = 'quizHistory';
+  static const String viewHistory = 'viewHistory';
+
+  // New additions
+  static const String tapToViewDetails = 'tapToViewDetails';
+  static const String deleteHistoryItem = 'deleteHistoryItem';
+  static const String deleteHistoryItemConfirm = 'deleteHistoryItemConfirm';
+  static const String historyItemDeleted = 'historyItemDeleted';
+  static const String delete = 'delete';
 }

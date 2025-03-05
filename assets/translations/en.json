@@ -38,5 +38,15 @@
   "generateQuizSelected": "Generate Quiz",
   "selectAll": "Select All",
   "clearSelection": "Clear",
-  "page": "Page"
+  "page": "Page",
+  "saveQuiz": "Save Quiz",
+  "quizSaved": "Quiz saved to history",
+  "quizHistory": "Quiz History",
+  "viewHistory": "View History",
+  "tapToViewDetails": "Tap to view details",
+  "deleteHistoryItem": "Delete item",
+  "deleteHistoryItemConfirm": "Are you sure you want to delete this quiz history item?",
+  "historyItemDeleted": "History item deleted",
+  "cancel": "Cancel",
+  "delete": "Delete"
 }
