@@ -47,7 +47,7 @@ class QuizReviewScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(AppStrings.quizReview.tr()),
         actions: [
-          const HistoryIcon(), // Add this line
+          
           Center(
             child: Padding(
               padding: const EdgeInsets.only(right: 16.0),
