@@ -16,8 +16,43 @@ class PdfUploadScreen extends StatefulWidget {
   _PdfUploadScreenState createState() => _PdfUploadScreenState();
 }
 
-class _PdfUploadScreenState extends State<PdfUploadScreen> {
+class _PdfUploadScreenState extends State<PdfUploadScreen>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = false;
+  late AnimationController _animationController;
+  late Animation<double> _animation1;
+  late Animation<double> _animation2;
+  late Animation<double> _animation3;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Create animation controller
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    )..repeat(reverse: true);
+
+    // Create animations with different curves for more dynamic effect
+    _animation1 = Tween<double>(begin: -0.3, end: 0.3).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    _animation2 = Tween<double>(begin: 0.3, end: -0.3).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    _animation3 = Tween<double>(begin: 350.0, end: 450.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   void _showSnackBar(String message, bool isError) {
     if (!mounted) return;
@@ -120,34 +155,40 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
           ),
         ],
       ),
-      body: AuraBox(
-        spots: [
-          AuraSpot(
-            color: AppTheme.customColors['primary']!,
-            radius: 400.0,
-            alignment: Alignment.topRight,
-            blurRadius: 5.0,
-            stops: const [0.0, 0.5],
-          ),
-          AuraSpot(
-            color: AppTheme.customColors['blue']!,
-            radius: 400.0,
-            alignment: Alignment.center,
-            blurRadius: 5.0,
-            stops: const [0.0, 0.5],
-          ),
-          AuraSpot(
-            color: AppTheme.customColors['error']!,
-            radius: 300.0,
-            alignment: Alignment.bottomRight,
-            blurRadius: 10.0,
-            stops: const [0.0, 0.7],
-          ),
-        ],
-        decoration: const BoxDecoration(
-          color: Colors.transparent,
-          shape: BoxShape.rectangle,
-        ),
+      body: AnimatedBuilder(
+        animation: _animationController,
+        builder: (context, child) {
+          return AuraBox(
+            spots: [
+              AuraSpot(
+                color: AppTheme.customColors['primary']!,
+                radius: _animation3.value,
+                alignment: Alignment(_animation1.value, _animation2.value),
+                blurRadius: 5.0,
+                stops: const [0.0, 0.5],
+              ),
+              AuraSpot(
+                color: AppTheme.customColors['blue']!,
+                radius: _animation3.value - 50,
+                alignment: Alignment(_animation2.value, _animation1.value),
+                blurRadius: 5.0,
+                stops: const [0.0, 0.5],
+              ),
+              AuraSpot(
+                color: AppTheme.customColors['error']!,
+                radius: 300.0 + (_animation1.value * 50),
+                alignment: Alignment(_animation1.value, 0.8),
+                blurRadius: 10.0,
+                stops: const [0.0, 0.7],
+              ),
+            ],
+            decoration: const BoxDecoration(
+              color: Colors.transparent,
+              shape: BoxShape.rectangle,
+            ),
+            child: child!,
+          );
+        },
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -172,8 +213,8 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
               Text(
                 AppStrings.pdfOnlyFiles.tr(),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey,
-                    ),
+                  color: Colors.grey,
+                ),
               ),
             ],
           ),
