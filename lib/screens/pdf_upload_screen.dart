@@ -1,34 +1,78 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:pdf_uploader/screens/quiz_generation_screen.dart';
+import 'package:pdf_uploader/screens/pdf_preview_screen.dart';
+import 'package:pdf_uploader/screens/quiz_history_screen.dart';
 import 'package:pdf_uploader/theme/app_theme.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
-import 'package:toasty_box/toast_enums.dart';
-import 'package:toasty_box/toasty_box.dart';
 import 'package:aura_box/aura_box.dart';
+import 'package:pdf_uploader/utils/strings.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class PdfUploadScreen extends StatefulWidget {
   static const id = 'pdf_upload_screen';
 
   const PdfUploadScreen({super.key});
   @override
-  // ignore: library_private_types_in_public_api
   _PdfUploadScreenState createState() => _PdfUploadScreenState();
 }
 
-class _PdfUploadScreenState extends State<PdfUploadScreen> {
-  /// Upload and read PDF file using FilePicker and PdfTextExtractor.
-  /// and this will navigate to the next screen if PDF is successfully read
-  ///
-  /// This function will:
-  /// 1. Open a file picker dialog to select a PDF file
-  /// 2. Read the selected PDF file using PdfTextExtractor
-  /// 3. If the file is successfully read, navigate to the next screen with the extracted text
-  /// 4. If there is an error, show an error message using ScaffoldMessenger
+class _PdfUploadScreenState extends State<PdfUploadScreen>
+    with SingleTickerProviderStateMixin {
+  bool _isLoading = false;
+  late AnimationController _animationController;
+  late Animation<double> _animation1;
+  late Animation<double> _animation2;
+  late Animation<double> _animation3;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Create animation controller
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    )..repeat(reverse: true);
+
+    // Create animations with different curves for more dynamic effect
+    _animation1 = Tween<double>(begin: -0.3, end: 0.3).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    _animation2 = Tween<double>(begin: 0.3, end: -0.3).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    _animation3 = Tween<double>(begin: 350.0, end: 450.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _showSnackBar(String message, bool isError) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   Future<void> uploadAndReadPDF() async {
-    /// Upload and read PDF file using FilePicker and PdfTextExtractor.
-    /// and this will navigate to the next screen if PDF is successfully read
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -37,132 +81,145 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
       );
 
       if (result != null && result.files.isNotEmpty) {
-        Uint8List? fileBytes = result.files.first.bytes;
-        if (fileBytes == null) throw Exception('No file data available');
+        final file = result.files.first;
+        final bytes = file.bytes;
 
-        PdfDocument document = PdfDocument(inputBytes: fileBytes);
-        String extractedText = PdfTextExtractor(document).extractText();
-        extractedText = extractedText.trim();
-        print(extractedText);
-        document.dispose();
+        if (bytes == null) {
+          throw Exception('Could not read file data');
+        }
 
-        ToastService.showSuccessToast(
-          // ignore: use_build_context_synchronously
+        _showSnackBar(AppStrings.pdfSuccess.tr(), false);
+
+        if (!mounted) return;
+
+        // Navigate to PDF preview screen instead of quiz generation
+        await Navigator.push(
           context,
-          length: ToastLength.medium,
-          expandedHeight: 100,
-          message: "PDF successfully read!",
-        );
-// *!   Original Code but with SnackBar
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   const SnackBar(
-        //     backgroundColor: Colors.green,
-        //     content: Row(
-        //       children: [
-        //         Icon(Icons.check, color: Colors.white),
-        //         SizedBox(width: 8),
-        //         Text('PDF successfully read!',
-        //             style: TextStyle(color: Colors.white)),
-        //       ],
-        //     ),
-        //   ),
-        // );
-        Navigator.pushNamed(
-          // ignore: use_build_context_synchronously
-          context,
-          QuizGenerationScreen.id,
-          arguments: extractedText, // Pass text to next screen
+          MaterialPageRoute(
+            builder: (context) => PdfPreviewScreen(
+              pdfBytes: bytes,
+              fileName: file.name,
+            ),
+          ),
         );
       }
     } catch (e) {
       if (kDebugMode) {
-        print(e);
+        print('Error reading PDF: $e');
       }
-// *!   Original Code but with SnackBar
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   const SnackBar(
-      //     backgroundColor: Colors.red,
-      //     content: Row(
-      //       children: [
-      //         Icon(Icons.error, color: Colors.white),
-      //         SizedBox(width: 8),
-      //         Text('Error reading PDF', style: TextStyle(color: Colors.white)),
-      //       ],
-      //     ),
-      //   ),
-      // );
-      ToastService.showErrorToast(
-        // ignore: use_build_context_synchronously
-        context,
-        length: ToastLength.medium,
-        expandedHeight: 100,
-        message: "Error reading PDF",
-      );
+      _showSnackBar(AppStrings.pdfError.tr(), true);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                    text: 'PDF ',
-                    style: TextStyle(
-                        color: AppTheme.customColors['background'],
-                        fontWeight: FontWeight.bold)),
-                TextSpan(
-                    text: 'Quizzer ',
-                    style: TextStyle(
-                        color: AppTheme.customColors['secondary'],
-                        fontWeight: FontWeight.bold)),
-                TextSpan(
-                    text: 'Uploader',
-                    style: TextStyle(
-                        color: AppTheme.customColors['background'],
-                        fontWeight: FontWeight.bold))
-              ],
+      appBar: AppBar(
+        title: Text(AppStrings.pdfQuizzerUploader.tr()),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: AppStrings.viewHistory.tr(),
+            onPressed: () {
+              Navigator.pushNamed(context, QuizHistoryScreen.id);
+            },
+          ),
+          PopupMenuButton<Locale>(
+            icon: const Icon(Icons.language),
+            onSelected: (locale) async {
+              await context.setLocale(locale);
+              if (mounted) {
+                setState(() {});
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: Locale('en'),
+                child: Text("English"),
+              ),
+              PopupMenuItem(
+                value: Locale('fr'),
+                child: Text("Français"),
+              ),
+              PopupMenuItem(
+                value: Locale('ar'),
+                child: Text("العربية"),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: AnimatedBuilder(
+        animation: _animationController,
+        builder: (context, child) {
+          return AuraBox(
+            spots: [
+              AuraSpot(
+                color: AppTheme.customColors['primary']!,
+                radius: _animation3.value,
+                alignment: Alignment(_animation1.value, _animation2.value),
+                blurRadius: 5.0,
+                stops: const [0.0, 0.5],
+              ),
+              AuraSpot(
+                color: AppTheme.customColors['blue']!,
+                radius: _animation3.value - 50,
+                alignment: Alignment(_animation2.value, _animation1.value),
+                blurRadius: 5.0,
+                stops: const [0.0, 0.5],
+              ),
+              AuraSpot(
+                color: AppTheme.customColors['error']!,
+                radius: 300.0 + (_animation1.value * 50),
+                alignment: Alignment(_animation1.value, 0.8),
+                blurRadius: 10.0,
+                stops: const [0.0, 0.7],
+              ),
+            ],
+            decoration: const BoxDecoration(
+              color: Colors.transparent,
+              shape: BoxShape.rectangle,
             ),
+            child: child!,
+          );
+        },
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (_isLoading)
+                const CircularProgressIndicator()
+              else
+                ElevatedButton.icon(
+                  onPressed: uploadAndReadPDF,
+                  icon: const Icon(
+                    Icons.upload_file,
+                    size: 28,
+                    color: Colors.white,
+                  ),
+                  label: Text(AppStrings.uploadPdf.tr()),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 16),
+                  ),
+                ),
+              const SizedBox(height: 16),
+              Text(
+                AppStrings.pdfOnlyFiles.tr(),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey,
+                ),
+              ),
+            ],
           ),
         ),
-        body: AuraBox(
-          spots: [
-            AuraSpot(
-              color: AppTheme.customColors['primary']!,
-              radius: 400.0,
-              alignment: Alignment.topRight,
-              blurRadius: 5.0,
-              stops: const [0.0, 0.5],
-            ),
-            // Places one blue spot in the center
-            AuraSpot(
-              color: AppTheme.customColors['blue']!,
-              radius: 400.0,
-              alignment: Alignment.center,
-              blurRadius: 5.0,
-              stops: const [0.0, 0.5],
-            ),
-            // Places one red spot in the bottom right
-            AuraSpot(
-              color: AppTheme.customColors['error']!,
-              radius: 300.0,
-              alignment: Alignment.bottomRight,
-              blurRadius: 10.0,
-              stops: const [0.0, 0.7],
-            ),
-          ],
-          decoration: const BoxDecoration(
-            color: Colors.transparent,
-            shape: BoxShape.rectangle,
-          ),
-          child: Center(
-            child: ElevatedButton(
-              onPressed: uploadAndReadPDF,
-              child: const Text('Upload PDF'),
-            ),
-          ),
-        ));
+      ),
+    );
   }
 }

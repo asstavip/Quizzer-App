@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:pdf_uploader/domain/quiz_history.dart';
 import 'package:pdf_uploader/screens/quiz_generation_screen.dart';
+import 'package:pdf_uploader/screens/quiz_history_screen.dart';
 import 'package:pdf_uploader/theme/app_theme.dart';
 import 'dart:async';
-import 'package:rflutter_alert/rflutter_alert.dart';
+// import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:pdf_uploader/utils/strings.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import 'answer_review_screen.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/services.dart';
+import '../services/history_service.dart';
 
 class QuizScreen extends StatefulWidget {
   static const String id = 'quiz';
@@ -15,32 +22,43 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
+  AudioPlayer? audioPlayer;
   List<Map<String, dynamic>>? questions;
   int questionIndex = 0;
-
   int score = 0;
   bool isAnswered = false;
   bool isLoadingNextQuestion = false;
-
   bool isProcessingAnswer = false;
   Color answerColor = Colors.white;
-  List<bool?> userAnswers = [];
+  dynamic userAnswers;
+  String? selectedAnswer;
 
   Timer? questionTimer;
   int remainingTime = 0;
   bool isTimeUp = false;
 
+  bool _quizSaved = false;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    audioPlayer = AudioPlayer();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Initialize data if not already done
     if (questions == null) {
       final args =
           ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       if (args != null) {
         questions = List<Map<String, dynamic>>.from(args['questions']);
-        userAnswers = List.filled(questions!.length, null);
         final settings = args['settings'];
+        bool isMultiChoice = questions!.first['type'] == 'multichoice';
+        userAnswers = isMultiChoice
+            ? List<String?>.filled(questions!.length, null)
+            : List<bool?>.filled(questions!.length, null);
         if (settings.timedMode) {
           startTimer(settings.timePerQuestion);
         }
@@ -68,44 +86,54 @@ class _QuizScreenState extends State<QuizScreen> {
     checkAnswer(null);
   }
 
-  void checkAnswer(bool? userPickedAnswer) {
-    if (isTimeUp && userPickedAnswer != null) return;
-
+  void checkAnswer(dynamic userChoice) {
+    if (isTimeUp && userChoice != null) return;
     if (isLoadingNextQuestion) return;
-
-    bool correctAnswer = questions![questionIndex]['questionAnswer'];
-    bool isCorrect = userPickedAnswer == correctAnswer;
-
     if (isProcessingAnswer || isAnswered) return;
+
+    final currentQuestion = questions![questionIndex];
+    bool isCorrect;
+
+    if (currentQuestion['type'] == 'truefalse') {
+      isCorrect = userChoice == currentQuestion['questionAnswer'];
+    } else {
+      isCorrect = userChoice == currentQuestion['questionAnswer'];
+    }
+
+    // Add haptic feedback
+    HapticFeedback.mediumImpact();
 
     setState(() {
       isAnswered = true;
       isProcessingAnswer = true;
-      userAnswers[questionIndex] = userPickedAnswer;
+      userAnswers[questionIndex] = userChoice;
+      selectedAnswer = userChoice is String ? userChoice : null;
+
       if (isCorrect) {
+        audioPlayer?.play(AssetSource('sounds/correct.mp3'));
         score++;
         answerColor = AppTheme.customColors['success']!;
       } else {
+        audioPlayer?.play(AssetSource('sounds/incorrect.mp3'));
         answerColor = AppTheme.customColors['error']!;
       }
     });
 
-    isLoadingNextQuestion = true; //to prevent spamming the next question button
+    isLoadingNextQuestion = true;
 
-    setState(() {
+    // Show correct answer for a moment
+    Future.delayed(const Duration(milliseconds: 1500), () {
       if (questionIndex >= questions!.length - 1) {
         showQuizComplete();
       } else {
-        Duration duration = const Duration(seconds: 1);
-        Future.delayed(duration, () {
-          setState(() {
-            questionIndex++;
-            isTimeUp = false;
-            isAnswered = false;
-            isLoadingNextQuestion =
-                false; //reset to check again if spamming or not
-            answerColor = Colors.white;
-          });
+        // Animate to next question
+        setState(() {
+          questionIndex++;
+          isTimeUp = false;
+          isAnswered = false;
+          isLoadingNextQuestion = false;
+          answerColor = Colors.white;
+          selectedAnswer = null;
         });
 
         if (questionTimer != null) {
@@ -120,76 +148,255 @@ class _QuizScreenState extends State<QuizScreen> {
 
   void showQuizComplete() {
     questionTimer?.cancel();
-    Alert(
-      style: const AlertStyle(
-        animationType: AnimationType.grow,
-        isCloseButton: false,
-        isOverlayTapDismiss: false,
-      ),
+    showModalBottomSheet(
       context: context,
-      type: AlertType.success,
-      title: "Quiz Complete!",
-      desc: "Your score: $score/${questions!.length}",
-      closeIcon: IconButton(onPressed: (){
-        Navigator.popUntil(context, ModalRoute.withName(QuizGenerationScreen.id));
-      }, icon: const Icon(Icons.close)),
-      buttons: [
-        DialogButton(
-          child: const Text(
-            "Review Answers",
-            style: TextStyle(color: Colors.white),
-          ),
-          onPressed: () {
-            Navigator.pushNamed(
-              context,
-              QuizReviewScreen.id,
-              arguments: {
-                'questions': questions,
-                'userAnswers': userAnswers,
-                'score': score,
-              },
-            );
-          },
+      backgroundColor: Colors.transparent,
+      isDismissible: false,
+      enableDrag: false,
+      isScrollControlled: true,
+      builder: (context) => TweenAnimationBuilder<double>(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+        tween: Tween(begin: 1.0, end: 0.0),
+        builder: (context, value, child) {
+          return Transform.translate(
+            offset: Offset(0, value * 100),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color:
+                            AppTheme.customColors['success']!.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.check_circle_outline,
+                        size: 48,
+                        color: AppTheme.customColors['success'],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      AppStrings.quizCompleteTitle.tr(),
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "${AppStrings.scoreText.tr()} $score/${questions!.length}",
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: AppTheme.customColors['success'],
+                          ),
+                    ),
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  AppTheme.customColors['secondary'],
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            onPressed: () => Navigator.pushNamed(
+                              context,
+                              QuizReviewScreen.id,
+                              arguments: {
+                                'questions': questions,
+                                'userAnswers': userAnswers,
+                                'score': score,
+                              },
+                            ),
+                            child: Text(AppStrings.reviewAnswers.tr()),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            onPressed: () => Navigator.popUntil(
+                              context,
+                              ModalRoute.withName(QuizGenerationScreen.id),
+                            ),
+                            child: Text(AppStrings.newQuiz.tr()),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // New save quiz history button
+                    if (!_quizSaved)
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 24),
+                        ),
+                        onPressed: _isSaving
+                            ? null
+                            : () {
+                                _saveQuizToHistory();
+                                Navigator.pushNamed(
+                                    context, (QuizHistoryScreen.id));
+                              },
+                        icon: _isSaving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.history),
+                        label: Text(AppStrings.saveQuiz.tr()),
+                      )
+                    else
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.check_circle_outline,
+                              color: Colors.teal,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              AppStrings.quizSaved.tr(),
+                              style: const TextStyle(
+                                color: Colors.teal,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildAnswerButtons() {
+    final currentQuestion = questions![questionIndex];
+
+    if (currentQuestion['type'] == 'truefalse') {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                onPressed: isTimeUp ? null : () => checkAnswer(true),
+                child: Text(AppStrings.trueLabel.tr(),
+                    style: const TextStyle(fontSize: 20)),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                onPressed: isTimeUp ? null : () => checkAnswer(false),
+                child: Text(AppStrings.falseLabel.tr(),
+                    style: const TextStyle(fontSize: 20)),
+              ),
+            ),
+          ],
         ),
-        DialogButton(
-          child: const Text(
-            "New Quiz",
-            style: TextStyle(color: Colors.white),
-          ),
-          onPressed: () {
-            Navigator.popUntil(
-              context,
-              ModalRoute.withName(QuizGenerationScreen.id),
+      );
+    } else {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children:
+              currentQuestion['options'].asMap().entries.map<Widget>((entry) {
+            final option = entry.value;
+            final letter = option.substring(0, 1); // Extract A, B, C, or D
+            final isSelected = selectedAnswer == letter;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      isSelected ? AppTheme.customColors['secondary'] : null,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                ),
+                onPressed:
+                    isTimeUp || isAnswered ? null : () => checkAnswer(letter),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        option,
+                        style: const TextStyle(fontSize: 16),
+                        softWrap: true,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             );
-          },
+          }).toList(),
         ),
-      ],
-    ).show();
+      );
+    }
   }
 
   @override
   void dispose() {
+    audioPlayer?.dispose();
     questionTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // If questions is null, it means we haven't received the data yet
     if (questions == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Question ${questionIndex + 1}/${questions!.length}'),
+        title: Text(
+            '${AppStrings.questionNumberText.tr()} ${questionIndex + 1}/${questions!.length}'),
         actions: [
           if (questionTimer != null)
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Center(
                 child: Text(
-                  '${remainingTime}s',
+                  '$remainingTime s',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -221,7 +428,6 @@ class _QuizScreenState extends State<QuizScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Center(
-                  /// where the Question goes
                   child: TweenAnimationBuilder<double>(
                     duration: const Duration(milliseconds: 200),
                     tween: Tween(begin: 0.0, end: isAnswered ? 1.0 : 0.0),
@@ -241,12 +447,13 @@ class _QuizScreenState extends State<QuizScreen> {
                                   questions![questionIndex]['questionText'],
                                   textAlign: TextAlign.center,
                                   style: Theme.of(context).textTheme.titleLarge,
+                                  softWrap: true,
                                 ),
                                 if (isTimeUp)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 16.0),
                                     child: Text(
-                                      'Time\'s up!',
+                                      AppStrings.timesUp.tr(),
                                       style: TextStyle(
                                         color:
                                             Theme.of(context).colorScheme.error,
@@ -265,38 +472,55 @@ class _QuizScreenState extends State<QuizScreen> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      onPressed: isTimeUp ? null : () => checkAnswer(true),
-                      child: const Text('True', style: TextStyle(fontSize: 20)),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      onPressed: isTimeUp ? null : () => checkAnswer(false),
-                      child:
-                          const Text('False', style: TextStyle(fontSize: 20)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _buildAnswerButtons(),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _saveQuizToHistory() async {
+    if (_quizSaved) return; // Prevent multiple saves
+
+    setState(() {
+      _isSaving = true; // Show loading state
+      _quizSaved = true; // Set quiz saved state
+    });
+
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final settings = args['settings'];
+    final pdfName = args['fileName'] ?? 'Unknown PDF';
+
+    final quizType = settings.quizType.toString().split('.').last;
+    final difficulty = settings.difficulty.toString().split('.').last;
+
+    final quizHistory = QuizHistory(
+      date: DateTime.now().toString(),
+      score: score,
+      totalQuestions: questions!.length,
+      quizType: quizType,
+      difficulty: difficulty,
+      pdfName: pdfName,
+      questionsData: questions, // Store complete quiz data
+      userAnswers: userAnswers, // Add user answers
+    );
+
+    final saved = await HistoryService.saveQuizHistory(quizHistory);
+
+    if (mounted) {
+      setState(() {
+        _quizSaved = true;
+        _isSaving = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.quizSaved.tr()),
+          backgroundColor: Colors.teal,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 }
