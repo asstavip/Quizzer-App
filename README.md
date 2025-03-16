@@ -7,6 +7,12 @@
 
 PDF Quizzer is an innovative mobile application that transforms PDF documents into interactive true/false quizzes. With just a few taps, users can upload a PDF and generate customizable quizzes to test their comprehension and knowledge.
 
+## Download
+
+- **For arm64-V8a:** [Download here](https://www.mediafire.com/file/5bk907f7njffqfp/app-arm64-v8a-release.apk/file)
+- **For armeabi-v7a:** [Download here](https://www.mediafire.com/file/i78v3muky151dsa/app-armeabi-v7a-release.apk/file)
+- **For x86_64:** [Download here](https://www.mediafire.com/file/tx2nesz69jfjp77/app-x86_64-release.apk/file)
+
 
 ## Features 🌟
 
