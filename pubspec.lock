@@ -283,14 +283,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.4"
-  flutter_pdf_text:
-    dependency: "direct main"
-    description:
-      name: flutter_pdf_text
-      sha256: "456fcc92ee6297f87e2e5bd46c35f1951a9cd716b8a00ab557d9d087c37a3b9c"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.7.0"
   flutter_pdfview:
     dependency: "direct main"
     description:
@@ -670,18 +662,18 @@ packages:
     dependency: transitive
     description:
       name: syncfusion_flutter_core
-      sha256: "7666506885ebc8f62bb928ad4588a73e20caaff2b2cf2b2b56f67d98f4113525"
+      sha256: "59b6d2a7deacade6129d2f15615ca49ed56278fea055cd2e52cace78a343dd5e"
       url: "https://pub.dev"
     source: hosted
-    version: "24.2.9"
+    version: "28.2.11"
   syncfusion_flutter_pdf:
     dependency: "direct main"
     description:
       name: syncfusion_flutter_pdf
-      sha256: a9e85bbfd574bb262733b33494240fda38bfeb58553537560ba4b3f54a31418b
+      sha256: f5a17ac2322d3e11140b2f5d2f4994b553d06c1e2287895897fa573c094bdee9
       url: "https://pub.dev"
     source: hosted
-    version: "24.2.9"
+    version: "28.2.11"
   synchronized:
     dependency: transitive
     description:

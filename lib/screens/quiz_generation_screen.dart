@@ -184,7 +184,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
 
       final url = Uri.parse(
           'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=$apiKey');
-      print(_getPrompt());
+      debugPrint(_getPrompt());
       final response = await http
           .post(
             url,

@@ -1,4 +1,5 @@
 import 'package:pdf_uploader/domain/quiz_history.dart';
+import 'package:pdf_uploader/utils/functions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HistoryService {
@@ -20,7 +21,7 @@ class HistoryService {
       return await prefs.setString(
           _storageKey, QuizHistory.toJsonList(historyList));
     } catch (e) {
-      print('Error saving quiz history: $e');
+      debugPrint('Error saving quiz history: $e');
       return false;
     }
   }
@@ -37,7 +38,7 @@ class HistoryService {
 
       return QuizHistory.fromJsonList(storedHistory);
     } catch (e) {
-      print('Error retrieving quiz history: $e');
+      debugPrint('Error retrieving quiz history: $e');
       return [];
     }
   }
@@ -64,7 +65,7 @@ class HistoryService {
       return await prefs.setString(
           _storageKey, QuizHistory.toJsonList(historyList));
     } catch (e) {
-      print('Error deleting quiz history item: $e');
+      debugPrint('Error deleting quiz history item: $e');
       return false;
     }
   }

@@ -12,6 +12,7 @@ class PdfUploadScreen extends StatefulWidget {
   static const id = 'pdf_upload_screen';
 
   const PdfUploadScreen({super.key});
+
   @override
   _PdfUploadScreenState createState() => _PdfUploadScreenState();
 }
@@ -23,6 +24,10 @@ class _PdfUploadScreenState extends State<PdfUploadScreen>
   late Animation<double> _animation1;
   late Animation<double> _animation2;
   late Animation<double> _animation3;
+
+  // Variables to track pointer position
+  Offset _pointerPosition = Offset.zero;
+  bool _isPointerActive = false;
 
   @override
   void initState() {
@@ -117,6 +122,14 @@ class _PdfUploadScreenState extends State<PdfUploadScreen>
     }
   }
 
+  // Convert screen coordinates to Alignment (-1 to 1 range)
+  Alignment _getAlignmentFromPosition(Offset position, Size size) {
+    // Convert to -1 to 1 range
+    double dx = (position.dx / size.width) * 2 - 1;
+    double dy = (position.dy / size.height) * 2 - 1;
+    return Alignment(dx, dy);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -155,70 +168,114 @@ class _PdfUploadScreenState extends State<PdfUploadScreen>
           ),
         ],
       ),
-      body: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          return AuraBox(
-            spots: [
-              AuraSpot(
-                color: AppTheme.customColors['primary']!,
-                radius: _animation3.value,
-                alignment: Alignment(_animation1.value, _animation2.value),
-                blurRadius: 5.0,
-                stops: const [0.0, 0.5],
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Listener(
+            onPointerDown: (event) {
+              setState(() {
+                _pointerPosition = event.position;
+                _isPointerActive = true;
+                _animationController.stop();
+              });
+            },
+            onPointerMove: (event) {
+              setState(() {
+                _pointerPosition = event.position;
+              });
+            },
+            onPointerUp: (event) {
+              setState(() {
+                _isPointerActive = false;
+                _animationController.repeat(reverse: true);
+              });
+            },
+            onPointerCancel: (event) {
+              setState(() {
+                _isPointerActive = false;
+                _animationController.repeat(reverse: true);
+              });
+            },
+            child: AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                // Use either pointer position or animation based on pointer state
+                final alignment1 = _isPointerActive
+                    ? _getAlignmentFromPosition(
+                        _pointerPosition, constraints.biggest)
+                    : Alignment(_animation1.value, _animation2.value);
+
+                final alignment2 = _isPointerActive
+                    ? Alignment(-alignment1.x * 0.7, -alignment1.y * 0.7)
+                    : Alignment(_animation2.value, _animation1.value);
+
+                final alignment3 = _isPointerActive
+                    ? Alignment(alignment1.x * 0.5, 0.8)
+                    : Alignment(_animation1.value, 0.8);
+
+                return AuraBox(
+                  spots: [
+                    AuraSpot(
+                      color: AppTheme.customColors['primary']!,
+                      radius: _animation3.value,
+                      alignment: alignment1,
+                      blurRadius: 5.0,
+                      stops: const [0.0, 0.5],
+                    ),
+                    AuraSpot(
+                      color: AppTheme.customColors['blue']!,
+                      radius: _animation3.value - 50,
+                      alignment: alignment2,
+                      blurRadius: 5.0,
+                      stops: const [0.0, 0.5],
+                    ),
+                    AuraSpot(
+                      color: AppTheme.customColors['error']!,
+                      radius: 300.0 + (_animation1.value * 50),
+                      alignment: alignment3,
+                      blurRadius: 10.0,
+                      stops: const [0.0, 0.7],
+                    ),
+                  ],
+                  decoration: const BoxDecoration(
+                    color: Colors.transparent,
+                    shape: BoxShape.rectangle,
+                  ),
+                  child: child!,
+                );
+              },
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (_isLoading)
+                      const CircularProgressIndicator()
+                    else
+                      ElevatedButton.icon(
+                        onPressed: uploadAndReadPDF,
+                        icon: const Icon(
+                          Icons.upload_file,
+                          size: 28,
+                          color: Colors.white,
+                        ),
+                        label: Text(AppStrings.uploadPdf.tr()),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 16),
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+                    Text(
+                      AppStrings.pdfOnlyFiles.tr(),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey,
+                          ),
+                    ),
+                  ],
+                ),
               ),
-              AuraSpot(
-                color: AppTheme.customColors['blue']!,
-                radius: _animation3.value - 50,
-                alignment: Alignment(_animation2.value, _animation1.value),
-                blurRadius: 5.0,
-                stops: const [0.0, 0.5],
-              ),
-              AuraSpot(
-                color: AppTheme.customColors['error']!,
-                radius: 300.0 + (_animation1.value * 50),
-                alignment: Alignment(_animation1.value, 0.8),
-                blurRadius: 10.0,
-                stops: const [0.0, 0.7],
-              ),
-            ],
-            decoration: const BoxDecoration(
-              color: Colors.transparent,
-              shape: BoxShape.rectangle,
             ),
-            child: child!,
           );
         },
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (_isLoading)
-                const CircularProgressIndicator()
-              else
-                ElevatedButton.icon(
-                  onPressed: uploadAndReadPDF,
-                  icon: const Icon(
-                    Icons.upload_file,
-                    size: 28,
-                    color: Colors.white,
-                  ),
-                  label: Text(AppStrings.uploadPdf.tr()),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 16),
-                  ),
-                ),
-              const SizedBox(height: 16),
-              Text(
-                AppStrings.pdfOnlyFiles.tr(),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
