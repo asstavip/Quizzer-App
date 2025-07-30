@@ -1,25 +1,23 @@
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:pdf_uploader/domain/quiz_history.dart';
 import 'package:pdf_uploader/utils/functions.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class HistoryService {
-  static const String _storageKey = 'quiz_history';
+  static const String _boxName = 'quiz_history';
+
+  static Future<void> initHive() async {
+    await Hive.initFlutter();
+    Hive.registerAdapter(QuizHistoryAdapter());
+    await Hive.openBox<QuizHistory>(_boxName);
+  }
 
   // Save quiz history
   static Future<bool> saveQuizHistory(QuizHistory history) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final String? storedHistory = prefs.getString(_storageKey);
-
-      List<QuizHistory> historyList = [];
-      if (storedHistory != null && storedHistory.isNotEmpty) {
-        historyList = QuizHistory.fromJsonList(storedHistory);
-      }
-
-      historyList.add(history);
-
-      return await prefs.setString(
-          _storageKey, QuizHistory.toJsonList(historyList));
+      final box = Hive.box<QuizHistory>(_boxName);
+      await box.add(history);
+      return true;
     } catch (e) {
       debugPrint('Error saving quiz history: $e');
       return false;
@@ -29,14 +27,8 @@ class HistoryService {
   // Get all saved quiz history
   static Future<List<QuizHistory>> getQuizHistory() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final String? storedHistory = prefs.getString(_storageKey);
-
-      if (storedHistory == null || storedHistory.isEmpty) {
-        return [];
-      }
-
-      return QuizHistory.fromJsonList(storedHistory);
+      final box = Hive.box<QuizHistory>(_boxName);
+      return box.values.toList();
     } catch (e) {
       debugPrint('Error retrieving quiz history: $e');
       return [];
@@ -45,25 +37,36 @@ class HistoryService {
 
   // Clear all history
   static Future<bool> clearHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    return await prefs.remove(_storageKey);
+    try {
+      final box = Hive.box<QuizHistory>(_boxName);
+      await box.clear();
+      return true;
+    } catch (e) {
+      debugPrint('Error clearing quiz history: $e');
+      return false;
+    }
   }
 
-  // Add this method to the HistoryService class
+  // Delete a specific quiz history item
   static Future<bool> deleteQuizHistoryItem(QuizHistory itemToDelete) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final String? storedHistory = prefs.getString(_storageKey);
+      final box = Hive.box<QuizHistory>(_boxName);
 
-      if (storedHistory == null || storedHistory.isEmpty) {
-        return false;
+      // Find the item with the matching date
+      final Map<dynamic, QuizHistory> map = box.toMap();
+      dynamic keyToDelete;
+
+      map.forEach((key, value) {
+        if (value.date == itemToDelete.date) {
+          keyToDelete = key;
+        }
+      });
+
+      if (keyToDelete != null) {
+        await box.delete(keyToDelete);
+        return true;
       }
-
-      List<QuizHistory> historyList = QuizHistory.fromJsonList(storedHistory);
-      historyList.removeWhere((item) => item.date == itemToDelete.date);
-
-      return await prefs.setString(
-          _storageKey, QuizHistory.toJsonList(historyList));
+      return false;
     } catch (e) {
       debugPrint('Error deleting quiz history item: $e');
       return false;

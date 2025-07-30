@@ -32,6 +32,7 @@ class QuizSettings {
 
 class QuizGenerationScreen extends StatefulWidget {
   static const String id = 'generateQuiz';
+
   const QuizGenerationScreen({super.key});
 
   @override
@@ -183,7 +184,8 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
       }
 
       final url = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=$apiKey');
+          ''
+              'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=$apiKey');
       debugPrint(_getPrompt());
       final response = await http
           .post(
@@ -266,7 +268,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
       appBar: AppBar(
         title: Text(AppStrings.quizSettings.tr()),
         actions: const [
-          HistoryIcon(), // Add this line
+          HistoryIcon(), // adding history icon to the app bar
         ],
       ),
       body: SingleChildScrollView(
@@ -307,7 +309,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
 
   // UI Components
   Widget _buildQuestionCountCard() {
-    return Card(
+    return Card(  
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pdf_uploader/screens/answer_detail_screen.dart';
 import 'package:pdf_uploader/screens/answer_review_screen.dart';
+import 'package:pdf_uploader/services/history_service.dart';
 import 'screens/pdf_upload_screen.dart';
 import 'screens/quiz_generation_screen.dart';
 import 'screens/quiz_screen.dart';
@@ -14,6 +15,10 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
   await dotenv.load(fileName: '.env');
+
+  // Initialize Hive before using it
+  await HistoryService.initHive();
+ // language
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('fr'), Locale('ar')],
@@ -36,6 +41,7 @@ class MyApp extends StatelessWidget {
       locale: context.locale,
       supportedLocales: context.supportedLocales,
       localizationsDelegates: context.localizationDelegates,
+      // routes :
       initialRoute: PdfUploadScreen.id,
       onGenerateRoute: (settings) {
         if (settings.name == PdfUploadScreen.id) {
@@ -43,30 +49,35 @@ class MyApp extends StatelessWidget {
             builder: (context) =>
                 const AnimatedWrapper(child: PdfUploadScreen()),
           );
-        } else if (settings.name == QuizGenerationScreen.id) {
+        }
+        else if (settings.name == QuizGenerationScreen.id) {
           return MaterialPageRoute(
             builder: (context) =>
                 const AnimatedWrapper(child: QuizGenerationScreen()),
             settings: settings,
           );
-        } else if (settings.name == QuizScreen.id) {
+        }
+        else if (settings.name == QuizScreen.id) {
           return MaterialPageRoute(
             builder: (context) => const AnimatedWrapper(child: QuizScreen()),
             settings: settings,
           );
-        } else if (settings.name == QuizReviewScreen.id) {
+        }
+        else if (settings.name == QuizReviewScreen.id) {
           return MaterialPageRoute(
             builder: (context) =>
                 const AnimatedWrapper(child: QuizReviewScreen()),
             settings: settings,
           );
-        } else if (settings.name == AnswerDetailScreen.id) {
+        }
+        else if (settings.name == AnswerDetailScreen.id) {
           return MaterialPageRoute(
             builder: (context) =>
                 const AnimatedWrapper(child: AnswerDetailScreen()),
             settings: settings,
           );
-        } else if (settings.name == QuizHistoryScreen.id) {
+        }
+        else if (settings.name == QuizHistoryScreen.id) {
           return MaterialPageRoute(
             builder: (context) =>
                 const AnimatedWrapper(child: QuizHistoryScreen()),

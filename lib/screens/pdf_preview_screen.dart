@@ -9,7 +9,7 @@ import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 
 import '../theme/app_theme.dart';
-
+// page selection
 class PdfPreviewScreen extends StatefulWidget {
   static const String id = 'pdf_preview_screen';
   final Uint8List pdfBytes;
@@ -38,6 +38,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   int _rangeEnd = 0;
 
   // Handle range selection
+  //region handle range selection
   void _handleRangeSelection() {
     if (_rangeStart > 0 && _rangeEnd > 0) {
       setState(() {
@@ -57,6 +58,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
       });
     }
   }
+  //endregion
 
   // Select a page in range mode
   void _selectPageInRangeMode(int page) {

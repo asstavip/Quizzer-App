@@ -49,19 +49,6 @@ class AppTheme {
           elevation: 0,
         ),
       ),
-      dialogTheme: DialogTheme(
-        backgroundColor: customColors['primary'],
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-      ),
-      cardTheme: CardTheme(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        color: customColors['surface'],
-      ),
       scaffoldBackgroundColor: customColors['background'],
     );
   }

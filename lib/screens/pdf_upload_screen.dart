@@ -17,6 +17,7 @@ class PdfUploadScreen extends StatefulWidget {
   _PdfUploadScreenState createState() => _PdfUploadScreenState();
 }
 
+// first page
 class _PdfUploadScreenState extends State<PdfUploadScreen>
     with SingleTickerProviderStateMixin {
   bool _isLoading = false;
@@ -61,7 +62,6 @@ class _PdfUploadScreenState extends State<PdfUploadScreen>
 
   void _showSnackBar(String message, bool isError) {
     if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
